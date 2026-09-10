@@ -41,10 +41,18 @@ export default function SkillsDirectoryPage() {
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  const formAnimation = {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } },
+  // Анимация для модального окна (фон)
+  const modalOverlayAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+
+  // Анимация для модального окна (контент)
+  const modalContentAnimation = {
+    initial: { opacity: 0, scale: 0.95, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+    exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
   if (!skills) {
@@ -192,66 +200,86 @@ export default function SkillsDirectoryPage() {
         Деморежим администратора. Данные сохраняются в этом браузере.
       </div>
 
-      <div className="sd-layout">
-        <section className="sd-panel">
-          <div className="sd-panel-heading">
-            <h2>Навыки</h2>
-            <span className="sd-counter">{filteredSkills.length} / {skills.length}</span>
-          </div>
+      {/* Убрали sd-layout, теперь панель занимает всю ширину */}
+      <section className="sd-panel">
+        <div className="sd-panel-heading">
+          <h2>Навыки</h2>
+          <span className="sd-counter">{filteredSkills.length} / {skills.length}</span>
+        </div>
 
-          <div className="sd-filters">
-            <label className="sd-field">
-              <span>Поиск</span>
-              <input
-                type="search"
-                placeholder="Название или описание"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
+        <div className="sd-filters">
+          <label className="sd-field">
+            <span>Поиск</span>
+            <input
+              type="search"
+              placeholder="Название или описание"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
 
-            <label className="sd-field">
-              <span>Направление</span>
-              <select
-                value={directionFilter}
-                onChange={(event) => setDirectionFilter(event.target.value)}
-              >
-                <option value="">Все направления</option>
-                {SKILL_DIRECTIONS.map((direction) => (
-                  <option key={direction} value={direction}>{direction}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          {filteredSkills.length === 0 ? (
-            <div className="sd-empty">Скиллы не найдены. Измените фильтры или добавьте новый.</div>
-          ) : (
-            <ul className="sd-list">
-              {filteredSkills.map((skill) => (
-                <li key={skill.id}>
-                  <button
-                    type="button"
-                    className={`sd-skill ${form.id === skill.id ? "sd-selected" : ""}`}
-                    aria-pressed={form.id === skill.id}
-                    onClick={() => editSkill(skill)}
-                  >
-                    <span className="sd-skill-heading">
-                      <strong>{skill.name}</strong>
-                      <span className="sd-tag">{skill.direction}</span>
-                    </span>
-                    <span className="sd-description">{skill.description || "Без описания"}</span>
-                  </button>
-                </li>
+          <label className="sd-field">
+            <span>Направление</span>
+            <select
+              value={directionFilter}
+              onChange={(event) => setDirectionFilter(event.target.value)}
+            >
+              <option value="">Все направления</option>
+              {SKILL_DIRECTIONS.map((direction) => (
+                <option key={direction} value={direction}>{direction}</option>
               ))}
-            </ul>
-          )}
-        </section>
+            </select>
+          </label>
+        </div>
 
-        <AnimatePresence>
-          {showForm && (
-            <motion.section className="sd-panel" {...formAnimation} key="skill-form">
-              <h2>{isEditing ? "Редактирование скилла" : "Новый скилл"}</h2>
+        {filteredSkills.length === 0 ? (
+          <div className="sd-empty">Скиллы не найдены. Измените фильтры или добавьте новый.</div>
+        ) : (
+          <ul className="sd-list">
+            {filteredSkills.map((skill) => (
+              <li key={skill.id}>
+                <button
+                  type="button"
+                  className={`sd-skill ${form.id === skill.id ? "sd-selected" : ""}`}
+                  aria-pressed={form.id === skill.id}
+                  onClick={() => editSkill(skill)}
+                >
+                  <span className="sd-skill-heading">
+                    <strong>{skill.name}</strong>
+                    <span className="sd-tag">{skill.direction}</span>
+                  </span>
+                  <span className="sd-description">{skill.description || "Без описания"}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* МОДАЛЬНОЕ ОКНО (по центру с размытием фона) */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            className="modal-overlay"
+            {...modalOverlayAnimation}
+            onClick={cancelForm} // Закрытие при клике на фон
+          >
+            <motion.div
+              className="modal-content"
+              {...modalContentAnimation}
+              onClick={(e) => e.stopPropagation()} // Предотвращаем закрытие при клике внутри формы
+            >
+              <div className="modal-header">
+                <h2>{isEditing ? "Редактирование скилла" : "Новый скилл"}</h2>
+                <button
+                  className="modal-close"
+                  type="button"
+                  onClick={cancelForm}
+                  aria-label="Закрыть"
+                >
+                  ×
+                </button>
+              </div>
 
               <form className="sd-form" onSubmit={handleSubmit}>
                 <label className="sd-field">
@@ -290,24 +318,27 @@ export default function SkillsDirectoryPage() {
                 {error && <div className="sd-notice sd-error" role="alert">{error}</div>}
                 {message && <div className="sd-notice sd-success" role="status">{message}</div>}
 
-                <div className="sd-actions">
-                  <button className="sd-button sd-primary" type="submit">
-                    {isEditing ? "Сохранить" : "Добавить"}
-                  </button>
+                <div className="modal-actions">
                   {isEditing && (
                     <button className="sd-button sd-danger" type="button" onClick={handleDelete}>
                       Удалить
                     </button>
                   )}
-                  <button className="sd-button" type="button" onClick={cancelForm}>
-                    Отмена
-                  </button>
+                  
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button className="sd-button" type="button" onClick={cancelForm}>
+                      Отмена
+                    </button>
+                    <button className="sd-button sd-primary" type="submit">
+                      {isEditing ? "Сохранить" : "Добавить"}
+                    </button>
+                  </div>
                 </div>
               </form>
-            </motion.section>
-          )}
-        </AnimatePresence>
-      </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }

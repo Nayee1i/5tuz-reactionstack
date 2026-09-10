@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import {
   getSubtreeIds,
   loadOrganization,
@@ -94,25 +93,31 @@ export default function DepartmentsPage() {
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  // Настройки плавного появления страницы (как мы делали в Home и Meetings)
+  // Анимация для появления самой страницы
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  // Настройки плавного выезда формы справа (при выборе элемента в дереве)
-  const formAnimation = {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } },
+  // Анимация для модального окна (фон)
+  const modalOverlayAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+
+  // Анимация для модального окна (контент)
+  const modalContentAnimation = {
+    initial: { opacity: 0, scale: 0.95, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+    exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
   if (!data) {
     return (
       <motion.section className="page" {...pageAnimation}>
         <h1 className="page-title">Подразделения</h1>
-
         <div className="org-alert org-alert-error" role="alert">
           {initial.error}
         </div>
@@ -121,7 +126,6 @@ export default function DepartmentsPage() {
   }
 
   const { departments, employees } = data;
-
   const isEditing = Boolean(form.id);
   const isRoot = isEditing && form.parentId === null;
 
@@ -139,12 +143,10 @@ export default function DepartmentsPage() {
 
   function updateField(event) {
     const { name, value } = event.target;
-
     setForm((current) => ({
       ...current,
       [name]: value,
     }));
-
     setError("");
     setMessage("");
   }
@@ -181,7 +183,6 @@ export default function DepartmentsPage() {
 
   function handleSubmit(event) {
     event.preventDefault();
-
     setError("");
     setMessage("");
 
@@ -237,18 +238,15 @@ export default function DepartmentsPage() {
     );
 
     if (saved) {
-  if (isEditing) {
-    setForm(department);
-  } else {
-      setShowForm(false);
-      setForm(emptyForm());
-
-      setMessage("Добавлено");
-
-      setTimeout(() => {
-        setMessage("");
-      }, 3000);
-    }
+      if (isEditing) {
+        setForm(department);
+      } else {
+        // При успешном создании закрываем форму и показываем краткое сообщение
+        setShowForm(false);
+        setForm(emptyForm());
+        setMessage("Подразделение успешно создано");
+        setTimeout(() => setMessage(""), 3000);
+      }
     }
   }
 
@@ -322,14 +320,17 @@ export default function DepartmentsPage() {
         Деморежим: изменения сохраняются только в этом браузере.
         Серверная авторизация пока не подключена.
       </div>
-      {!showForm && message && (
-  <div className="entity-added-message" role="status">
-    {message}
-  </div>
+
+      {/* Всплывающее сообщение об успехе (если форма закрыта) */}
+      {message && !showForm && (
+        <div className="org-alert org-alert-success" role="status" style={{ marginBottom: "16px" }}>
+          {message}
+        </div>
       )}
 
-      <div className="org-layout">
-        <section className="card org-tree-panel">
+      {/* Дерево подразделений теперь занимает всю ширину */}
+      <div className="grid">
+        <section className="card span-12 org-tree-panel">
           <div className="card-header">
             <h2>Оргструктура</h2>
             <span className="badge info">{departments.length}</span>
@@ -343,15 +344,33 @@ export default function DepartmentsPage() {
             onSelect={selectDepartment}
           />
         </section>
+      </div>
 
-        {/* AnimatePresence гарантирует, что форма плавно "уедет" при нажатии "Отмена" или "Удалить" */}
-        <AnimatePresence>
-          {showForm && (
-            <motion.section className="card" {...formAnimation} key="department-form">
-              <div className="card-header">
+      {/* МОДАЛЬНОЕ ОКНО (по центру с размытием фона, без дубликатов) */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            className="modal-overlay"
+            {...modalOverlayAnimation}
+            onClick={cancelForm} // Закрытие при клике на затемненный фон
+          >
+            <motion.div
+              className="modal-content"
+              {...modalContentAnimation}
+              onClick={(e) => e.stopPropagation()} // Запрет закрытия при клике внутри формы
+            >
+              <div className="modal-header">
                 <h2>
-                  {isEditing ? "Редактирование" : "Новое подразделение"}
+                  {isEditing ? "Редактирование подразделения" : "Новое подразделение"}
                 </h2>
+                <button
+                  className="modal-close"
+                  type="button"
+                  onClick={cancelForm}
+                  aria-label="Закрыть"
+                >
+                  ×
+                </button>
               </div>
 
               <form className="org-form" onSubmit={handleSubmit}>
@@ -365,6 +384,7 @@ export default function DepartmentsPage() {
                     placeholder="Например, Backend · Team B"
                     maxLength={120}
                     required
+                    autoFocus
                   />
                 </div>
 
@@ -396,8 +416,7 @@ export default function DepartmentsPage() {
                   </select>
 
                   <small className="org-help">
-                    Смена родителя переносит подразделение вместе со всем
-                    его поддеревом. Корень структуры в этом прототипе фиксирован.
+                    Смена родителя переносит подразделение вместе со всем его поддеревом.
                   </small>
                 </div>
 
@@ -426,17 +445,13 @@ export default function DepartmentsPage() {
                   </div>
                 )}
 
-                {message && (
+                {message && isEditing && (
                   <div className="org-alert org-alert-success" role="status">
                     {message}
                   </div>
                 )}
 
-                <div className="org-form-actions">
-                  <button type="submit" className="button primary">
-                    {isEditing ? "Сохранить изменения" : "Создать"}
-                  </button>
-
+                <div className="modal-actions">
                   {isEditing && !isRoot && (
                     <button
                       type="button"
@@ -446,14 +461,15 @@ export default function DepartmentsPage() {
                       Удалить
                     </button>
                   )}
-
-                  <button
-                    type="button"
-                    className="button"
-                    onClick={cancelForm}
-                  >
-                    Отмена
-                  </button>
+                  
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button type="button" className="button secondary" onClick={cancelForm}>
+                      Отмена
+                    </button>
+                    <button type="submit" className="button primary">
+                      {isEditing ? "Сохранить изменения" : "Создать"}
+                    </button>
+                  </div>
                 </div>
               </form>
 
@@ -470,230 +486,17 @@ export default function DepartmentsPage() {
                       {selectedEmployees.map((employee) => (
                         <div className="list-item" key={employee.id}>
                           <span>{employee.fullName}</span>
-                          <span className="badge info">
-                            {employee.direction}
-                          </span>
+                          <span className="badge info">{employee.direction}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
               )}
-            </motion.section>
-          )}
-        </AnimatePresence>
-        {showForm &&
-  createPortal(
-    <div
-      className="entity-modal-overlay"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) {
-          cancelForm();
-        }
-      }}
-    >
-      <section
-        className="entity-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="department-modal-title"
-        onMouseDown={(event) => event.stopPropagation()}
-      >
-        <button
-          type="button"
-          className="entity-modal-close"
-          onClick={cancelForm}
-          aria-label="Закрыть"
-          title="Закрыть"
-        >
-          ×
-        </button>
-
-        <div className="entity-modal-header">
-          <h2 id="department-modal-title">
-            {isEditing
-              ? "Редактирование подразделения"
-              : "Новое подразделение"}
-          </h2>
-
-          <p className="entity-modal-subtitle">
-            {isEditing
-              ? "Измените параметры подразделения и сохраните изменения."
-              : "Добавьте новый узел в структуру компании."}
-          </p>
-        </div>
-
-        <form
-          className="org-form"
-          onSubmit={handleSubmit}
-        >
-          <div className="field">
-            <label htmlFor="department-name">
-              Название
-            </label>
-
-            <input
-              id="department-name"
-              name="name"
-              value={form.name}
-              onChange={updateField}
-              placeholder="Например, Backend · Team B"
-              maxLength={120}
-              required
-              autoFocus
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="department-parent">
-              Родительское подразделение
-            </label>
-
-            <select
-              id="department-parent"
-              name="parentId"
-              value={form.parentId ?? ""}
-              onChange={updateField}
-              disabled={isRoot}
-              required={!isRoot}
-            >
-              {isRoot ? (
-                <option value="">
-                  Корень структуры
-                </option>
-              ) : (
-                <>
-                  <option value="">
-                    Выберите подразделение
-                  </option>
-
-                  {parentOptions.map((department) => (
-                    <option
-                      key={department.id}
-                      value={department.id}
-                    >
-                      {department.name}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
-
-            <small className="org-help">
-              Смена родителя переносит подразделение
-              вместе со всем его поддеревом.
-            </small>
-          </div>
-
-          <div className="field">
-            <label htmlFor="department-manager">
-              Руководитель
-            </label>
-
-            <select
-              id="department-manager"
-              name="managerId"
-              value={form.managerId}
-              onChange={updateField}
-            >
-              <option value="">
-                Не назначен
-              </option>
-
-              {employees.map((employee) => (
-                <option
-                  key={employee.id}
-                  value={employee.id}
-                >
-                  {employee.fullName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {error && (
-            <div
-              className="org-alert org-alert-error"
-              role="alert"
-            >
-              {error}
-            </div>
-          )}
-
-          {showForm && message && (
-            <div
-              className="org-alert org-alert-success"
-              role="status"
-            >
-              {message}
-            </div>
-          )}
-
-          <div className="org-form-actions">
-            <button
-              type="submit"
-              className="button primary"
-            >
-              {isEditing
-                ? "Сохранить изменения"
-                : "Создать"}
-            </button>
-
-            {isEditing && !isRoot && (
-              <button
-                type="button"
-                className="button org-delete"
-                onClick={handleDelete}
-              >
-                Удалить
-              </button>
-            )}
-
-            <button
-              type="button"
-              className="button"
-              onClick={cancelForm}
-            >
-              Отмена
-            </button>
-          </div>
-        </form>
-
-        {isEditing && (
-          <div className="org-members">
-            <h3>
-              Сотрудники подразделения
-            </h3>
-
-            {selectedEmployees.length === 0 ? (
-              <div className="empty">
-                В этом подразделении пока нет сотрудников.
-              </div>
-            ) : (
-              <div className="list">
-                {selectedEmployees.map((employee) => (
-                  <div
-                    className="list-item"
-                    key={employee.id}
-                  >
-                    <span>
-                      {employee.fullName}
-                    </span>
-
-                    <span className="badge info">
-                      {employee.direction}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+            </motion.div>
+          </motion.div>
         )}
-      </section>
-    </div>,
-    document.body
-  )}
-      </div>
+      </AnimatePresence>
     </motion.section>
   );
 }

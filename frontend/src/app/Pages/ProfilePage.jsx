@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useApi } from "../../shared/hooks/useApi";
 import { getProfile, uploadAvatar } from "../../shared/api/profile.api";
 import { motion } from "framer-motion";
@@ -125,7 +125,18 @@ export default function ProfilePage() {
   const { data, loading, error, reload } = useApi(getProfile, []);
   const fileInputRef = useRef(null);
 
-  // Настройки плавного появления и исчезновения страницы (единый стиль для всего приложения)
+  const [bio, setBio] = useState("");
+  const [bioDraft, setBioDraft] = useState("");
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [isSavingBio, setIsSavingBio] = useState(false);
+
+  // При первой загрузке данных заполняем локальное состояние био
+  const dataLoaded = !loading && !error && !!data;
+  if (dataLoaded && !bio && data.user?.bio) {
+    setBio(data.user.bio);
+    setBioDraft(data.user.bio);
+  }
+
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
@@ -150,6 +161,31 @@ export default function ProfilePage() {
     }
 
     event.target.value = "";
+  };
+
+  const startEditBio = () => {
+    setBioDraft(bio);
+    setIsEditingBio(true);
+  };
+
+  const saveBio = async () => {
+    setIsSavingBio(true);
+    try {
+      // TODO: заменить на реальный запрос к бэкенду
+      // await api.patch("/api/users/me/bio", { bio: bioDraft });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      setBio(bioDraft);
+      setIsEditingBio(false);
+    } catch (err) {
+      console.error("Не удалось сохранить описание:", err);
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
+  const cancelBio = () => {
+    setBioDraft(bio);
+    setIsEditingBio(false);
   };
 
   if (loading) {
@@ -245,6 +281,66 @@ export default function ProfilePage() {
                 ) : null}
               </div>
             </div>
+          </div>
+
+          {/* ===== О СЕБЕ ===== */}
+          <div className="profile-bio">
+            <div className="profile-bio-label">О себе</div>
+
+            {isEditingBio ? (
+              <div className="profile-bio-editor">
+                <textarea
+                  value={bioDraft}
+                  onChange={(event) => setBioDraft(event.target.value)}
+                  placeholder="Расскажите о своём опыте, интересах и целях развития"
+                  maxLength={600}
+                  autoFocus
+                />
+
+                <div className="profile-bio-meta">
+                  <span>{bioDraft.length} / 600</span>
+
+                  <div className="profile-bio-actions">
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={cancelBio}
+                      disabled={isSavingBio}
+                    >
+                      Отмена
+                    </button>
+
+                    <button
+                      className="button primary"
+                      type="button"
+                      onClick={saveBio}
+                      disabled={isSavingBio}
+                    >
+                      {isSavingBio ? "Сохранение..." : "Сохранить"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : bio ? (
+              <button
+                type="button"
+                className="profile-bio-display"
+                onClick={startEditBio}
+                title="Нажмите, чтобы отредактировать"
+              >
+                <p className="profile-bio-text">{bio}</p>
+                <span className="profile-bio-edit-hint">Редактировать</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="profile-bio-empty"
+                onClick={startEditBio}
+              >
+                <span>Добавьте информацию о себе</span>
+                <span className="profile-bio-edit-hint">Расскажите о своём опыте и целях</span>
+              </button>
+            )}
           </div>
 
           <div className="profile-hero-stats">

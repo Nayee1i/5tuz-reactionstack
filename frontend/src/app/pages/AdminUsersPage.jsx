@@ -47,17 +47,24 @@ export default function AdminUsersPage() {
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  // Анимации для страницы и формы
+  // Анимация для появления самой страницы
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  const formAnimation = {
-    initial: { opacity: 0, x: 20 },
-    animate: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
-    exit: { opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } },
+  // Анимация для модального окна
+  const modalOverlayAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+
+  const modalContentAnimation = {
+    initial: { opacity: 0, scale: 0.95, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+    exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
   if (!data) {
@@ -219,6 +226,8 @@ export default function AdminUsersPage() {
         departmentId: employee.departmentId,
         isAdmin: employee.isAdmin,
       });
+      // Опционально: можно закрывать форму после успешного создания
+      // setShowForm(false); 
     }
   }
 
@@ -284,9 +293,9 @@ export default function AdminUsersPage() {
         Изменения доступны только в этом браузере.
       </div>
 
-      <div className="users-layout">
-        {/* ЛЕВАЯ КОЛОНКА: Список и фильтры */}
-        <section className="card">
+      {/* Таблица теперь занимает всю ширину благодаря grid и span-12 */}
+      <div className="grid">
+        <section className="card span-12">
           <div className="card-header">
             <h2>Список пользователей</h2>
             <span className="badge info">
@@ -412,15 +421,33 @@ export default function AdminUsersPage() {
             </div>
           )}
         </section>
+      </div>
 
-        {/* ПРАВАЯ КОЛОНКА: Форма (с анимацией появления/исчезновения) */}
-        <AnimatePresence>
-          {showForm && (
-            <motion.section className="card" {...formAnimation} key="user-form">
-              <div className="card-header">
+      {/* МОДАЛЬНОЕ ОКНО (по центру с размытием фона) */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            className="modal-overlay"
+            {...modalOverlayAnimation}
+            onClick={cancelForm} // Закрытие при клике на фон
+          >
+            <motion.div
+              className="modal-content"
+              {...modalContentAnimation}
+              onClick={(e) => e.stopPropagation()} // Предотвращаем закрытие при клике внутри формы
+            >
+              <div className="modal-header">
                 <h2>
                   {isEditing ? "Редактирование пользователя" : "Новый пользователь"}
                 </h2>
+                <button
+                  className="modal-close"
+                  type="button"
+                  onClick={cancelForm}
+                  aria-label="Закрыть"
+                >
+                  ×
+                </button>
               </div>
 
               <form className="org-form" onSubmit={handleSubmit}>
@@ -516,11 +543,7 @@ export default function AdminUsersPage() {
                   </div>
                 )}
 
-                <div className="org-form-actions">
-                  <button className="button primary" type="submit">
-                    {isEditing ? "Сохранить изменения" : "Добавить"}
-                  </button>
-
+                <div className="modal-actions">
                   {isEditing && (
                     <button
                       className="button org-delete"
@@ -530,16 +553,21 @@ export default function AdminUsersPage() {
                       Удалить
                     </button>
                   )}
-
-                  <button className="button" type="button" onClick={cancelForm}>
-                    Отмена
-                  </button>
+                  
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button className="button secondary" type="button" onClick={cancelForm}>
+                      Отмена
+                    </button>
+                    <button className="button primary" type="submit">
+                      {isEditing ? "Сохранить изменения" : "Добавить"}
+                    </button>
+                  </div>
                 </div>
               </form>
-            </motion.section>
-          )}
-        </AnimatePresence>
-      </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }
