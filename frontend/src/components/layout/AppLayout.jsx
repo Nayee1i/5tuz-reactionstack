@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 
 const navigation = [
   { to: "/", label: "Главная", end: true },
+  { to: "/departments", label: "Подразделения" },
   { to: "/meetings", label: "Встречи" },
   { to: "/profile", label: "Профиль" },
 ];

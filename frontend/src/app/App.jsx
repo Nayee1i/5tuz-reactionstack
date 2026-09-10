@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage.jsx";
 import MeetingsPage from "./pages/MeetingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import DepartmentsPage from "./pages/DepartmentsPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 
 export default function App() {
@@ -14,6 +15,7 @@ export default function App() {
 
         <Route path="/" element={<AppLayout />}>
           <Route index element={<HomePage />} />
+          <Route path="departments" element={<DepartmentsPage />} />
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="*" element={<NotFoundPage />} />
