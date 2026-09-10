@@ -61,7 +61,7 @@ router.post('/login', async (req, res) => {
         isAdmin: user.is_admin 
       },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     res.json({
