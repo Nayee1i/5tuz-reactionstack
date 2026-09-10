@@ -47,24 +47,27 @@ services:
       - ./backend:/app
       - /app/node_modules
 
+
   frontend:
     build:
       context: ./frontend
       dockerfile: dockerfile
     container_name: hackathon_frontend
     ports:
-      - "3000:3000"
+      - "3000:3000" # Или 5173:5173, если у тебя Vite (проверь package.json)
     environment:
-      - REACT_APP_API_URL=http://localhost:3001
-      - CHOKIDAR_USEPOLLING=true # Критично для работы hot-reload в Docker
-      - WDS_SOCKET_PORT=0        # Фикс для webpack dev server в контейнере
+      # ВАЖНО: используем имя сервиса 'backend', а не localhost!
+      - REACT_APP_API_URL=http://backend:3001 
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
     depends_on:
       - backend
     restart: unless-stopped
     volumes:
       - ./frontend:/app
-      - /app/node_modules # Изолируем node_modules контейнера от хоста
-
+      - /app/node_modules
+  
+  
   nginx:
     image: nginx:alpine
     container_name: hackathon_nginx
