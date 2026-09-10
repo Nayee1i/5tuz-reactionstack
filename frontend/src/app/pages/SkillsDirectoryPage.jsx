@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   loadSkills,
   saveSkills,
@@ -17,7 +18,10 @@ function emptyForm(direction = "BACK") {
 export default function SkillsDirectoryPage() {
   const [initial] = useState(() => {
     try {
-      return { skills: loadSkills(), error: "" };
+      return {
+        skills: loadSkills(),
+        error: "",
+      };
     } catch {
       return {
         skills: null,
@@ -33,12 +37,13 @@ export default function SkillsDirectoryPage() {
   const [directionFilter, setDirectionFilter] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [showForm, setShowForm] = useState(false); // <-- Добавлено состояние видимости
+  const [showForm, setShowForm] = useState(false);
 
   if (!skills) {
     return (
       <section className="skills-directory">
         <h1>Справочник скиллов</h1>
+
         <div className="sd-notice sd-error" role="alert">
           {initial.error}
         </div>
@@ -47,20 +52,27 @@ export default function SkillsDirectoryPage() {
   }
 
   const isEditing = Boolean(form.id);
-  const query = search.trim().toLocaleLowerCase("ru");
+
+  const query = search
+    .trim()
+    .toLocaleLowerCase("ru");
 
   const filteredSkills = skills
     .filter((skill) => {
       const matchesDirection =
-        !directionFilter || skill.direction === directionFilter;
+        !directionFilter ||
+        skill.direction === directionFilter;
 
-      const matchesSearch = `${skill.name} ${skill.description}`
-        .toLocaleLowerCase("ru")
-        .includes(query);
+      const matchesSearch =
+        `${skill.name} ${skill.description}`
+          .toLocaleLowerCase("ru")
+          .includes(query);
 
       return matchesDirection && matchesSearch;
     })
-    .sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    .sort((a, b) =>
+      a.name.localeCompare(b.name, "ru")
+    );
 
   function clearMessages() {
     setError("");
@@ -68,15 +80,18 @@ export default function SkillsDirectoryPage() {
   }
 
   function startCreating() {
-    setForm(emptyForm(directionFilter || "BACK"));
+    setForm(
+      emptyForm(directionFilter || "BACK")
+    );
+
     clearMessages();
-    setShowForm(true); // <-- Показываем форму
+    setShowForm(true);
   }
 
   function editSkill(skill) {
     setForm({ ...skill });
     clearMessages();
-    setShowForm(true); // <-- Показываем форму при редактировании
+    setShowForm(true);
   }
 
   function updateField(event) {
@@ -96,18 +111,22 @@ export default function SkillsDirectoryPage() {
       setSkills(nextSkills);
       setError("");
       setMessage(successMessage);
+
       return true;
     } catch {
       setMessage("");
+
       setError(
         "Не удалось сохранить изменения. Проверьте доступность и свободное место в хранилище браузера."
       );
+
       return false;
     }
   }
 
   function handleSubmit(event) {
     event.preventDefault();
+
     clearMessages();
 
     const name = form.name.trim();
@@ -123,72 +142,116 @@ export default function SkillsDirectoryPage() {
       return;
     }
 
-    // В прототипе запрещаем одинаковые названия внутри направления.
     const duplicate = skills.some(
       (skill) =>
         skill.id !== form.id &&
         skill.direction === form.direction &&
-        skill.name.trim().toLocaleLowerCase("ru") ===
+        skill.name
+          .trim()
+          .toLocaleLowerCase("ru") ===
           name.toLocaleLowerCase("ru")
     );
 
     if (duplicate) {
-      setError("Скилл с таким названием уже есть в этом направлении.");
+      setError(
+        "Скилл с таким названием уже есть в этом направлении."
+      );
       return;
     }
 
-    if (isEditing && !skills.some((skill) => skill.id === form.id)) {
-      setError("Скилл не найден. Обновите страницу.");
+    if (
+      isEditing &&
+      !skills.some(
+        (skill) => skill.id === form.id
+      )
+    ) {
+      setError(
+        "Скилл не найден. Обновите страницу."
+      );
       return;
     }
 
     const skill = {
       id:
         form.id ||
-        `skill-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        `skill-${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 10)}`,
       name,
       direction: form.direction,
       description,
     };
 
     const nextSkills = isEditing
-      ? skills.map((item) => (item.id === skill.id ? skill : item))
+      ? skills.map((item) =>
+          item.id === skill.id
+            ? skill
+            : item
+        )
       : [...skills, skill];
 
     const saved = commit(
       nextSkills,
-      isEditing ? "Скилл обновлён." : "Скилл добавлен."
+      isEditing
+        ? "Скилл обновлён."
+        : "Скилл добавлен."
     );
 
     if (saved) {
-      setForm(skill);
+      if (isEditing) {
+        setForm(skill);
+      } else {
+        setShowForm(false);
+        setForm(emptyForm(directionFilter || "BACK"));
+        setMessage("Добавлено");
+
+        // необязательно: убрать надпись через 3 секунды
+        setTimeout(() => {
+          setMessage("");
+        }, 2000);
+      }
     }
   }
 
   function handleDelete() {
-    if (!form.id) return;
+    if (!form.id) {
+      return;
+    }
 
     clearMessages();
 
-    if (!window.confirm(`Удалить скилл «${form.name}» из справочника?`)) {
+    const confirmed = window.confirm(
+      `Удалить скилл «${form.name}» из справочника?`
+    );
+
+    if (!confirmed) {
       return;
     }
 
     const saved = commit(
-      skills.filter((skill) => skill.id !== form.id),
+      skills.filter(
+        (skill) => skill.id !== form.id
+      ),
       "Скилл удалён."
     );
 
     if (saved) {
-      setForm(emptyForm(directionFilter || "BACK"));
-      setShowForm(false); // <-- Скрываем форму после удаления
+      setForm(
+        emptyForm(directionFilter || "BACK")
+      );
+
+      setShowForm(false);
     }
   }
 
   function cancelForm() {
-    setShowForm(false); // <-- Новая функция для закрытия формы
+    setShowForm(false);
+
     clearMessages();
-    setForm(emptyForm(directionFilter || "BACK"));
+
+    setForm(
+      emptyForm(directionFilter || "BACK")
+    );
   }
 
   return (
@@ -196,7 +259,11 @@ export default function SkillsDirectoryPage() {
       <header className="sd-header">
         <div>
           <h1>Справочник скиллов</h1>
-          <p>Технические навыки по направлениям BACK, FRONT и QA</p>
+
+          <p>
+            Технические навыки по направлениям
+            BACK, FRONT и QA
+          </p>
         </div>
 
         <button
@@ -209,164 +276,243 @@ export default function SkillsDirectoryPage() {
       </header>
 
       <div className="sd-notice">
-        Деморежим администратора. Данные сохраняются в этом браузере.
-        Связи с планами обучения и встречами пока не проверяются.
+        Деморежим администратора. Данные
+        сохраняются в этом браузере. Связи с
+        планами обучения и встречами пока не
+        проверяются.
       </div>
+      {message && (
+      <div className="sd-added-message" role="status">
+        {message}
+      </div>
+      )}
 
       <div className="sd-layout">
         <section className="sd-panel">
           <div className="sd-panel-heading">
             <h2>Навыки</h2>
+
             <span className="sd-counter">
-              {filteredSkills.length} / {skills.length}
+              {filteredSkills.length} /{" "}
+              {skills.length}
             </span>
           </div>
 
           <div className="sd-filters">
             <label className="sd-field">
               <span>Поиск</span>
+
               <input
                 type="search"
                 placeholder="Название или описание"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(event) =>
+                  setSearch(event.target.value)
+                }
               />
             </label>
 
             <label className="sd-field">
               <span>Направление</span>
+
               <select
                 value={directionFilter}
                 onChange={(event) =>
-                  setDirectionFilter(event.target.value)
+                  setDirectionFilter(
+                    event.target.value
+                  )
                 }
               >
-                <option value="">Все направления</option>
+                <option value="">
+                  Все направления
+                </option>
 
-                {SKILL_DIRECTIONS.map((direction) => (
-                  <option key={direction} value={direction}>
-                    {direction}
-                  </option>
-                ))}
+                {SKILL_DIRECTIONS.map(
+                  (direction) => (
+                    <option
+                      key={direction}
+                      value={direction}
+                    >
+                      {direction}
+                    </option>
+                  )
+                )}
               </select>
             </label>
           </div>
 
           {filteredSkills.length === 0 ? (
             <div className="sd-empty">
-              Скиллы не найдены. Измените фильтры или добавьте новый.
+              Скиллы не найдены. Измените
+              фильтры или добавьте новый.
             </div>
           ) : (
             <ul className="sd-list">
-              {filteredSkills.map((skill) => (
-                <li key={skill.id}>
-                  <button
-                    type="button"
-                    className={`sd-skill ${
-                      form.id === skill.id ? "sd-selected" : ""
-                    }`}
-                    aria-pressed={form.id === skill.id}
-                    onClick={() => editSkill(skill)}
-                  >
-                    <span className="sd-skill-heading">
-                      <strong>{skill.name}</strong>
-                      <span className="sd-tag">{skill.direction}</span>
-                    </span>
+              {filteredSkills.map(
+                (skill) => (
+                  <li key={skill.id}>
+                    <button
+                      type="button"
+                      className={`sd-skill ${
+                        form.id === skill.id
+                          ? "sd-selected"
+                          : ""
+                      }`}
+                      aria-pressed={
+                        form.id === skill.id
+                      }
+                      onClick={() =>
+                        editSkill(skill)
+                      }
+                    >
+                      <span className="sd-skill-heading">
+                        <strong>
+                          {skill.name}
+                        </strong>
 
-                    <span className="sd-description">
-                      {skill.description || "Без описания"}
-                    </span>
-                  </button>
-                </li>
-              ))}
+                        <span className="sd-tag">
+                          {skill.direction}
+                        </span>
+                      </span>
+
+                      <span className="sd-description">
+                        {skill.description ||
+                          "Без описания"}
+                      </span>
+                    </button>
+                  </li>
+                )
+              )}
             </ul>
           )}
         </section>
-
-        {showForm && ( // <-- Условный рендеринг правой панели с формой
-          <section className="sd-panel">
-            <h2>{isEditing ? "Редактирование скилла" : "Новый скилл"}</h2>
-
-            <form className="sd-form" onSubmit={handleSubmit}>
-              <label className="sd-field">
-                <span>Название</span>
-                <input
-                  name="name"
-                  value={form.name}
-                  onChange={updateField}
-                  placeholder="Например, PostgreSQL"
-                  maxLength={120}
-                  required
-                />
-              </label>
-
-              <label className="sd-field">
-                <span>Направление</span>
-                <select
-                  name="direction"
-                  value={form.direction}
-                  onChange={updateField}
-                  required
-                >
-                  {SKILL_DIRECTIONS.map((direction) => (
-                    <option key={direction} value={direction}>
-                      {direction}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="sd-field">
-                <span>Описание</span>
-                <textarea
-                  name="description"
-                  value={form.description}
-                  onChange={updateField}
-                  placeholder="Что входит в этот навык"
-                  rows={5}
-                  maxLength={2000}
-                />
-              </label>
-
-              {error && (
-                <div className="sd-notice sd-error" role="alert">
-                  {error}
-                </div>
-              )}
-
-              {message && (
-                <div className="sd-notice sd-success" role="status">
-                  {message}
-                </div>
-              )}
-
-              <div className="sd-actions">
-                <button className="sd-button sd-primary" type="submit">
-                  {isEditing ? "Сохранить" : "Добавить"}
-                </button>
-
-                {isEditing && (
-                  <button
-                    className="sd-button sd-danger"
-                    type="button"
-                    onClick={handleDelete}
-                  >
-                    Удалить
-                  </button>
-                )}
-
-                <button
-                  className="sd-button"
-                  type="button"
-                  onClick={cancelForm}
-                >
-                  Отмена
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
       </div>
+
+      {showForm &&
+  createPortal(
+    <div
+      className="sd-modal-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          cancelForm();
+        }
+      }}
+    >
+      <section
+        className="sd-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="skill-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="sd-modal-close"
+          onClick={cancelForm}
+          aria-label="Закрыть"
+        >
+          ×
+        </button>
+
+        <div className="sd-modal-header">
+          <div>
+            <h2 id="skill-modal-title">
+              {isEditing ? "Редактирование скилла" : "Новый скилл"}
+            </h2>
+
+            <p className="sd-modal-subtitle">
+              {isEditing
+                ? "Измените данные навыка и сохраните изменения."
+                : "Добавьте новый технический навык в справочник."}
+            </p>
+          </div>
+        </div>
+
+        <form className="sd-form" onSubmit={handleSubmit}>
+          <label className="sd-field">
+            <span>Название</span>
+
+            <input
+              name="name"
+              value={form.name}
+              onChange={updateField}
+              placeholder="Например, PostgreSQL"
+              maxLength={120}
+              required
+              autoFocus
+            />
+          </label>
+
+          <label className="sd-field">
+            <span>Направление</span>
+
+            <select
+              name="direction"
+              value={form.direction}
+              onChange={updateField}
+              required
+            >
+              {SKILL_DIRECTIONS.map((direction) => (
+                <option key={direction} value={direction}>
+                  {direction}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="sd-field">
+            <span>Описание</span>
+
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={updateField}
+              placeholder="Что входит в этот навык"
+              rows={5}
+              maxLength={2000}
+            />
+          </label>
+
+          {error && (
+            <div className="sd-notice sd-error" role="alert">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="sd-notice sd-success" role="status">
+              {message}
+            </div>
+          )}
+
+          <div className="sd-actions">
+            <button className="sd-button sd-primary" type="submit">
+              {isEditing ? "Сохранить" : "Добавить"}
+            </button>
+
+            {isEditing && (
+              <button
+                className="sd-button sd-danger"
+                type="button"
+                onClick={handleDelete}
+              >
+                Удалить
+              </button>
+            )}
+
+            <button
+              className="sd-button"
+              type="button"
+              onClick={cancelForm}
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>,
+    document.body
+  )}
     </section>
   );
 }

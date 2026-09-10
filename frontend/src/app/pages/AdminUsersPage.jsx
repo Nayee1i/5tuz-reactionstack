@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useState } from "react";
 import {
   loadOrganization,
@@ -145,77 +146,105 @@ export default function AdminUsersPage() {
   }
 
   function handleSubmit(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    setError("");
-    setMessage("");
+  setError("");
 
-    const fullName = form.fullName.trim();
+  const fullName = form.fullName.trim();
 
-    if (!fullName) {
-      setError("Введите ФИО сотрудника.");
-      return;
-    }
-
-    if (!DIRECTIONS.includes(form.direction)) {
-      setError("Выберите направление.");
-      return;
-    }
-
-    const departmentExists = departments.some(
-      (department) => department.id === form.departmentId
-    );
-
-    if (!departmentExists) {
-      setError("Выберите существующее подразделение.");
-      return;
-    }
-
-    const existingEmployee = employees.find(
-      (employee) => employee.id === form.id
-    );
-
-    if (isEditing && !existingEmployee) {
-      setError("Пользователь не найден. Обновите страницу.");
-      return;
-    }
-
-    const employee = {
-      ...existingEmployee,
-      id:
-        form.id ||
-        `employee-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 10)}`,
-      fullName,
-      direction: form.direction,
-      departmentId: form.departmentId,
-      isAdmin: form.isAdmin,
-    };
-
-    const nextEmployees = isEditing
-      ? employees.map((item) =>
-          item.id === employee.id ? employee : item
-        )
-      : [...employees, employee];
-
-    const saved = commit(
-      { ...data, employees: nextEmployees },
-      isEditing
-        ? "Данные пользователя сохранены."
-        : "Пользователь добавлен."
-    );
-
-    if (saved) {
-      setForm({
-        id: employee.id,
-        fullName: employee.fullName,
-        direction: employee.direction,
-        departmentId: employee.departmentId,
-        isAdmin: employee.isAdmin,
-      });
-    }
+  if (!fullName) {
+    setError("Введите ФИО сотрудника.");
+    return;
   }
+
+  if (!DIRECTIONS.includes(form.direction)) {
+    setError("Выберите направление.");
+    return;
+  }
+
+  const departmentExists = departments.some(
+    (department) => department.id === form.departmentId
+  );
+
+  if (!departmentExists) {
+    setError("Выберите существующее подразделение.");
+    return;
+  }
+
+  // Запоминаем: это создание или редактирование
+  const wasEditing = Boolean(form.id);
+
+  const existingEmployee = employees.find(
+    (employee) => employee.id === form.id
+  );
+
+  if (wasEditing && !existingEmployee) {
+    setError("Пользователь не найден. Обновите страницу.");
+    return;
+  }
+
+  const employee = {
+    ...existingEmployee,
+    id:
+      form.id ||
+      `employee-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 10)}`,
+    fullName,
+    direction: form.direction,
+    departmentId: form.departmentId,
+    isAdmin: form.isAdmin,
+  };
+
+  const nextEmployees = wasEditing
+    ? employees.map((item) =>
+        item.id === employee.id ? employee : item
+      )
+    : [...employees, employee];
+
+  const saved = commit(
+    {
+      ...data,
+      employees: nextEmployees,
+    },
+    wasEditing
+      ? "Данные пользователя сохранены."
+      : "Добавлено"
+  );
+
+  if (!saved) {
+    return;
+  }
+
+  // Редактирование — оставляем окно открытым
+  if (wasEditing) {
+    setForm({
+      id: employee.id,
+      fullName: employee.fullName,
+      direction: employee.direction,
+      departmentId: employee.departmentId,
+      isAdmin: employee.isAdmin,
+    });
+
+    return;
+  }
+
+  setShowForm(false);
+
+  setForm(
+    emptyForm(
+      departmentFilter ||
+        departments[0]?.id ||
+        ""
+    )
+  );
+
+  setMessage("Добавлено");
+
+  setTimeout(() => {
+    setMessage("");
+  }, 3000);
+}
 
   function handleDelete() {
     if (!form.id) return;
@@ -286,6 +315,11 @@ export default function AdminUsersPage() {
         сотрудников, а не реальные учётные записи для входа.
         Изменения доступны только в этом браузере.
       </div>
+      {!showForm && message && (
+    <div className="entity-added-message" role="status">
+      {message}
+    </div>
+      )}
 
       <div className="users-layout">
         <section className="card">
@@ -439,137 +473,207 @@ export default function AdminUsersPage() {
           )}
         </section>
 
-        {showForm && ( // <-- Условный рендеринг формы
-          <section className="card">
-            <div className="card-header">
-              <h2>
-                {isEditing ? "Редактирование пользователя" : "Новый пользователь"}
-              </h2>
-            </div>
+        {showForm &&
+  createPortal(
+    <div
+      className="entity-modal-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          cancelForm();
+        }
+      }}
+    >
+      <section
+        className="entity-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="entity-modal-close"
+          onClick={cancelForm}
+          aria-label="Закрыть"
+          title="Закрыть"
+        >
+          ×
+        </button>
 
-            <form className="org-form" onSubmit={handleSubmit}>
-              <div className="field">
-                <label htmlFor="employee-name">ФИО</label>
-                <input
-                  id="employee-name"
-                  name="fullName"
-                  value={form.fullName}
-                  onChange={updateField}
-                  placeholder="Иванов Иван Иванович"
-                  maxLength={150}
-                  required
-                />
+        <div className="entity-modal-header">
+          <h2 id="user-modal-title">
+            {isEditing
+              ? "Редактирование пользователя"
+              : "Новый пользователь"}
+          </h2>
+
+          <p className="entity-modal-subtitle">
+            {isEditing
+              ? "Измените данные сотрудника и сохраните изменения."
+              : "Добавьте нового сотрудника в систему."}
+          </p>
+        </div>
+
+        <form className="org-form" onSubmit={handleSubmit}>
+          <div className="field">
+            <label htmlFor="employee-name">
+              ФИО
+            </label>
+
+            <input
+              id="employee-name"
+              name="fullName"
+              value={form.fullName}
+              onChange={updateField}
+              placeholder="Иванов Иван Иванович"
+              maxLength={150}
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="employee-direction">
+              Направление
+            </label>
+
+            <select
+              id="employee-direction"
+              name="direction"
+              value={form.direction}
+              onChange={updateField}
+              required
+            >
+              {DIRECTIONS.map((direction) => (
+                <option
+                  key={direction}
+                  value={direction}
+                >
+                  {direction}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="field">
+            <label htmlFor="employee-department">
+              Подразделение
+            </label>
+
+            <select
+              id="employee-department"
+              name="departmentId"
+              value={form.departmentId}
+              onChange={updateField}
+              required
+            >
+              <option value="">
+                Выберите подразделение
+              </option>
+
+              {departments.map((department) => (
+                <option
+                  key={department.id}
+                  value={department.id}
+                >
+                  {department.name}
+                </option>
+              ))}
+            </select>
+
+            <small className="org-help">
+              Чтобы перенести сотрудника, выберите другое
+              подразделение и сохраните изменения.
+            </small>
+          </div>
+
+          <label className="users-checkbox">
+            <input
+              type="checkbox"
+              name="isAdmin"
+              checked={form.isAdmin}
+              onChange={updateField}
+            />
+
+            <span>
+              Административный доступ
+            </span>
+          </label>
+
+          <div className="users-access-note">
+            Руководитель назначается на странице
+            «Подразделения».
+          </div>
+
+          {selectedManagedDepartments.length > 0 && (
+            <div>
+              <div className="item-title">
+                Руководит подразделениями
               </div>
 
-              <div className="field">
-                <label htmlFor="employee-direction">Направление</label>
-                <select
-                  id="employee-direction"
-                  name="direction"
-                  value={form.direction}
-                  onChange={updateField}
-                  required
-                >
-                  {DIRECTIONS.map((direction) => (
-                    <option key={direction} value={direction}>
-                      {direction}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field">
-                <label htmlFor="employee-department">Подразделение</label>
-                <select
-                  id="employee-department"
-                  name="departmentId"
-                  value={form.departmentId}
-                  onChange={updateField}
-                  required
-                >
-                  <option value="">Выберите подразделение</option>
-
-                  {departments.map((department) => (
-                    <option key={department.id} value={department.id}>
+              <ul className="users-managed-list">
+                {selectedManagedDepartments.map(
+                  (department) => (
+                    <li key={department.id}>
                       {department.name}
-                    </option>
-                  ))}
-                </select>
-
-                <small className="org-help">
-                  Чтобы перенести сотрудника, выберите другое
-                  подразделение и сохраните изменения.
-                </small>
-              </div>
-
-              <label className="users-checkbox">
-                <input
-                  type="checkbox"
-                  name="isAdmin"
-                  checked={form.isAdmin}
-                  onChange={updateField}
-                />
-                <span>Административный доступ (тестовый признак)</span>
-              </label>
-
-              <div className="users-access-note">
-                Руководитель назначается на странице «Подразделения».
-                Перенос сотрудника сам по себе не снимает с него
-                руководство другими подразделениями.
-              </div>
-
-              {selectedManagedDepartments.length > 0 && (
-                <div>
-                  <div className="item-title">
-                    Руководит подразделениями
-                  </div>
-
-                  <ul className="users-managed-list">
-                    {selectedManagedDepartments.map((department) => (
-                      <li key={department.id}>{department.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {error && (
-                <div className="org-alert org-alert-error" role="alert">
-                  {error}
-                </div>
-              )}
-
-              {message && (
-                <div className="org-alert org-alert-success" role="status">
-                  {message}
-                </div>
-              )}
-
-              <div className="org-form-actions">
-                <button className="button primary" type="submit">
-                  {isEditing ? "Сохранить изменения" : "Добавить"}
-                </button>
-
-                {isEditing && (
-                  <button
-                    className="button org-delete"
-                    type="button"
-                    onClick={handleDelete}
-                  >
-                    Удалить
-                  </button>
+                    </li>
+                  )
                 )}
+              </ul>
+            </div>
+          )}
 
-                <button
-                  className="button"
-                  type="button"
-                  onClick={cancelForm}
-                >
-                  Отмена
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
+          {error && (
+            <div
+              className="org-alert org-alert-error"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
+          {showForm && message && (
+            <div
+              className="org-alert org-alert-success"
+              role="status"
+            >
+              {message}
+            </div>
+          )}
+
+          <div className="org-form-actions">
+            <button
+              className="button primary"
+              type="submit"
+            >
+              {isEditing
+                ? "Сохранить изменения"
+                : "Добавить"}
+            </button>
+
+            {isEditing && (
+              <button
+                className="button org-delete"
+                type="button"
+                onClick={handleDelete}
+              >
+                Удалить
+              </button>
+            )}
+
+            <button
+              className="button"
+              type="button"
+              onClick={cancelForm}
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>,
+    document.body
+  )}
       </div>
     </section>
   );
