@@ -13,7 +13,8 @@ model users {
   id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   login          String   @unique
   password_hash  String
-  full_name      String
+  first_name      String
+  last_name      String
   direction_id   String @db.Uuid
   department_id  String @db.Uuid
   is_admin       Boolean  @default(false)
