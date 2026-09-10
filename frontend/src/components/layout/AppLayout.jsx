@@ -6,6 +6,7 @@ const navigation = [
   { to: "/meetings", label: "Встречи" },
   { to: "/profile", label: "Профиль" },
   { to: "/admin/users", label: "Администрирование" },
+  {to: "/directories/skills", label: "Справочник скиллов",},
 ];
 
 export default function AppLayout() {
