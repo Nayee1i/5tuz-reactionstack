@@ -1,7 +1,14 @@
 FROM node:lts-alpine
+
+# 🆕 КРИТИЧЕСКИ ВАЖНО: Устанавливаем библиотеки для Prisma в Alpine
+RUN apk add --no-cache openssl libc6-compat
+
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-EXPOSE 3000
+
+# 🆕 Исправил порт на 3001, чтобы он совпадал с твоим docker-compose.yml
+EXPOSE 3001 
+
 CMD ["npm", "start"]
