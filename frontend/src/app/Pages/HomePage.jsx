@@ -1,7 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import { useApi } from "../../shared/hooks/useApi";
 import { getDashboard } from "../../shared/api/dashboard.api";
-import { useNavigate } from "react-router-dom";
 import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
+import { motion } from "framer-motion";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -182,7 +183,6 @@ function ErrorState({ message, onRetry }) {
   return (
     <div className="card">
       <div className="empty">{message}</div>
-
       <div className="stack">
         <button className="button secondary" type="button" onClick={onRetry}>
           Повторить
@@ -193,79 +193,58 @@ function ErrorState({ message, onRetry }) {
 }
 
 export default function HomePage() {
-  const { data, loading, error, reload } = useApi(getDashboard, []);
   const navigate = useNavigate();
+  const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
   const ongoingMeeting = meetingsStatus?.ongoing;
 
+  // Настройки анимации для этой страницы
+  const pageAnimation = {
+    initial: { opacity: 0, y: 12 }, // Начинаем чуть ниже и прозрачные
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } }, // Плавно всплываем
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } }, // Уходим чуть вверх при смене страницы
+  };
+
   if (loading) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <div className="card">
           <div className="empty">Загрузка дашборда...</div>
         </div>
-      </section>
+      </motion.section>
     );
   }
 
-  if (error) {
+  if (error || !data) {
     return (
-      <section className="page">
-        <ErrorState message={error} onRetry={reload} />
-      </section>
-    );
-  }
-
-  if (!data) {
-    return (
-      <section className="page">
-        <ErrorState message="Данные не получены" onRetry={reload} />
-      </section>
+      <motion.section className="page" {...pageAnimation}>
+        <ErrorState message={error || "Данные не получены"} onRetry={reload} />
+      </motion.section>
     );
   }
 
   const user = data.viewedUser || data.user || {};
-
   const kpis = Array.isArray(data.kpis) ? data.kpis : [];
   const skills = Array.isArray(data.skills) ? data.skills : [];
   const meetings = Array.isArray(data.meetings) ? data.meetings : [];
   const problems = Array.isArray(data.problems) ? data.problems : [];
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
+
   const displayName = user.firstName || user.fullName || "пользователь";
+  const subtitle = [user.direction, user.department].filter(Boolean).join(" · ");
 
-  const subtitle = [user.direction, user.department]
-    .filter(Boolean)
-    .join(" · ");
-
-  return (
-    <section className="page">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title">
-            {getGreeting()}, {displayName}
-          </h1>
-
-          <p className="page-subtitle">
-            {subtitle || "Ваш рабочий центр развития"}
-          </p>
-        </div>
-
-        <div className="page-actions">
-          <button className="button secondary" type="button">
-            Открыть статистику
-          </button>
-        </div>
-      </header>
-
+    return (
+    <motion.section className="page" {...pageAnimation}>
       {ongoingMeeting ? (
-        <div className="live-banner-fixed">
+        <div className="live-banner">
           <div className="live-banner-info">
             <span className="live-dot" aria-hidden="true" />
-            <strong>Сейчас идёт встреча: {ongoingMeeting.title}</strong>
-
-            <div className="meeting-meta">
-              {ongoingMeeting.type} · {ongoingMeeting.format} · Участник:{" "}
-              {ongoingMeeting.participant?.fullName || "—"}
+            <div>
+              <strong>Сейчас идёт встреча: {ongoingMeeting.title}</strong>
+              <div className="live-banner-meta">
+                {ongoingMeeting.type} · {ongoingMeeting.format} · Участник:{" "}
+                {ongoingMeeting.participant?.fullName || "—"}
+              </div>
             </div>
           </div>
 
@@ -278,6 +257,22 @@ export default function HomePage() {
           </button>
         </div>
       ) : null}
+
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">
+            {getGreeting()}, {displayName}
+          </h1>
+          <p className="page-subtitle">
+            {subtitle || "Ваш рабочий центр развития"}
+          </p>
+        </div>
+        <div className="page-actions">
+          <button className="button secondary" type="button">
+            Открыть статистику
+          </button>
+        </div>
+      </header>
 
       <div className="grid">
         <section className="card span-12">
@@ -437,6 +432,6 @@ export default function HomePage() {
           ) : null}
         </section>
       </div>
-    </section>
+    </motion.section>
   );
 }

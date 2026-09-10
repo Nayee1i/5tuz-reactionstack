@@ -2352,64 +2352,59 @@ h3 {
   .meeting-actions {
     justify-content: flex-start;
   }
-
-  /* ============================= */
-/* Fixed live banner             */
+}
+/* ============================= */
+/* Live banner (inside layout)   */
 /* ============================= */
 
-.live-banner-fixed {
-  position: fixed;
-  top: 48px;
-  left: 232px;
-  right: 0;
-  z-index: 9;
-  padding: 16px 32px;
-  background: linear-gradient(135deg, rgba(235, 87, 87, 0.15), rgba(235, 87, 87, 0.08));
-  border-bottom: 2px solid rgba(235, 87, 87, 0.6);
-  backdrop-filter: blur(12px);
+.live-banner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(235, 87, 87, 0.18), rgba(235, 87, 87, 0.08));
+  border: 2px solid rgba(235, 87, 87, 0.5);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 20px rgba(235, 87, 87, 0.15);
   animation: slideDown 0.3s ease;
-  box-shadow: 0 4px 16px rgba(235, 87, 87, 0.2);
 }
 
 .live-banner-info {
   display: flex;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
   flex: 1;
 }
 
 .live-banner-info strong {
-  font-size: 14px;
+  display: block;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text);
   letter-spacing: -0.01em;
+  margin-bottom: 4px;
 }
 
-.live-banner-info .meeting-meta {
+.live-banner-meta {
   font-size: 13px;
   color: var(--text-secondary);
 }
 
 .live-dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: var(--danger);
-  display: inline-block;
   flex-shrink: 0;
-  box-shadow: 0 0 0 4px rgba(235, 87, 87, 0.3);
+  box-shadow: 0 0 0 4px rgba(235, 87, 87, 0.25);
   animation: pulse 1.5s infinite;
 }
 
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -2420,17 +2415,12 @@ h3 {
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
-    box-shadow: 0 0 0 4px rgba(235, 87, 87, 0.3);
+    box-shadow: 0 0 0 4px rgba(235, 87, 87, 0.25);
   }
   50% {
-    opacity: 0.7;
+    opacity: 0.8;
     box-shadow: 0 0 0 8px rgba(235, 87, 87, 0.1);
   }
-}
-
-/* Отступ контента, когда баннер активен */
-.workspace.has-live-banner .content {
-  padding-top: 100px;
 }
 
 /* Адаптив */
@@ -2454,7 +2444,6 @@ h3 {
   .workspace.has-live-banner .content {
     padding-top: 140px;
   }
-}
 }
 
 /* ============================= */
@@ -2537,4 +2526,57 @@ h3 {
 
 .live-meeting-banner > div:first-child {
   margin-right: auto;
+}
+
+/* Оживляем glow */
+.auth-glow {
+  display: block;
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, var(--accent-subtle) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+/* Контейнер для демо-кнопок */
+.demo-chips {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.demo-chip {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.demo-chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--accent-subtle);
+}
+
+/* Анимация тряски при ошибке */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+.auth-card.shake {
+  animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }

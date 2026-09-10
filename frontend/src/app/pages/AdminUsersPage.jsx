@@ -3,6 +3,7 @@ import {
   loadOrganization,
   saveOrganization,
 } from "../../data/organizationStore";
+import { motion, AnimatePresence } from "framer-motion";
 
 const DIRECTIONS = ["BACK", "FRONT", "QA"];
 
@@ -44,17 +45,31 @@ export default function AdminUsersPage() {
 
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [showForm, setShowForm] = useState(false); // <-- Добавлено
+  const [showForm, setShowForm] = useState(false);
+
+  // Настройки плавного появления страницы
+  const pageAnimation = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
+  };
+
+  // Настройки плавного выезда формы справа
+  const formAnimation = {
+    initial: { opacity: 0, x: 20 },
+    animate: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, x: 20, transition: { duration: 0.15, ease: "easeIn" } },
+  };
 
   if (!data) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <h1 className="page-title">Пользователи</h1>
 
         <div className="org-alert org-alert-error" role="alert">
           {initial.error}
         </div>
-      </section>
+      </motion.section>
     );
   }
 
@@ -112,7 +127,7 @@ export default function AdminUsersPage() {
     );
     setError("");
     setMessage("");
-    setShowForm(true); // <-- Показываем форму
+    setShowForm(true);
   }
 
   function editEmployee(employee) {
@@ -123,7 +138,7 @@ export default function AdminUsersPage() {
       departmentId: employee.departmentId,
       isAdmin: Boolean(employee.isAdmin),
     });
-    setShowForm(true); // <-- Показываем форму при редактировании
+    setShowForm(true);
     setError("");
     setMessage("");
   }
@@ -252,18 +267,18 @@ export default function AdminUsersPage() {
       setForm(
         emptyForm(departmentFilter || departments[0]?.id || "")
       );
-      setShowForm(false); // <-- Скрываем форму после удаления
+      setShowForm(false);
     }
   }
 
   function cancelForm() {
-    setShowForm(false); // <-- Новая функция для отмены
+    setShowForm(false);
     setError("");
     setMessage("");
   }
 
   return (
-    <section className="page">
+    <motion.section className="page" {...pageAnimation}>
       <div className="page-header">
         <div>
           <h1 className="page-title">Пользователи</h1>
@@ -439,138 +454,141 @@ export default function AdminUsersPage() {
           )}
         </section>
 
-        {showForm && ( // <-- Условный рендеринг формы
-          <section className="card">
-            <div className="card-header">
-              <h2>
-                {isEditing ? "Редактирование пользователя" : "Новый пользователь"}
-              </h2>
-            </div>
-
-            <form className="org-form" onSubmit={handleSubmit}>
-              <div className="field">
-                <label htmlFor="employee-name">ФИО</label>
-                <input
-                  id="employee-name"
-                  name="fullName"
-                  value={form.fullName}
-                  onChange={updateField}
-                  placeholder="Иванов Иван Иванович"
-                  maxLength={150}
-                  required
-                />
+        {/* AnimatePresence гарантирует плавное исчезновение формы при отмене */}
+        <AnimatePresence>
+          {showForm && (
+            <motion.section className="card" {...formAnimation} key="user-form">
+              <div className="card-header">
+                <h2>
+                  {isEditing ? "Редактирование пользователя" : "Новый пользователь"}
+                </h2>
               </div>
 
-              <div className="field">
-                <label htmlFor="employee-direction">Направление</label>
-                <select
-                  id="employee-direction"
-                  name="direction"
-                  value={form.direction}
-                  onChange={updateField}
-                  required
-                >
-                  {DIRECTIONS.map((direction) => (
-                    <option key={direction} value={direction}>
-                      {direction}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field">
-                <label htmlFor="employee-department">Подразделение</label>
-                <select
-                  id="employee-department"
-                  name="departmentId"
-                  value={form.departmentId}
-                  onChange={updateField}
-                  required
-                >
-                  <option value="">Выберите подразделение</option>
-
-                  {departments.map((department) => (
-                    <option key={department.id} value={department.id}>
-                      {department.name}
-                    </option>
-                  ))}
-                </select>
-
-                <small className="org-help">
-                  Чтобы перенести сотрудника, выберите другое
-                  подразделение и сохраните изменения.
-                </small>
-              </div>
-
-              <label className="users-checkbox">
-                <input
-                  type="checkbox"
-                  name="isAdmin"
-                  checked={form.isAdmin}
-                  onChange={updateField}
-                />
-                <span>Административный доступ (тестовый признак)</span>
-              </label>
-
-              <div className="users-access-note">
-                Руководитель назначается на странице «Подразделения».
-                Перенос сотрудника сам по себе не снимает с него
-                руководство другими подразделениями.
-              </div>
-
-              {selectedManagedDepartments.length > 0 && (
-                <div>
-                  <div className="item-title">
-                    Руководит подразделениями
-                  </div>
-
-                  <ul className="users-managed-list">
-                    {selectedManagedDepartments.map((department) => (
-                      <li key={department.id}>{department.name}</li>
-                    ))}
-                  </ul>
+              <form className="org-form" onSubmit={handleSubmit}>
+                <div className="field">
+                  <label htmlFor="employee-name">ФИО</label>
+                  <input
+                    id="employee-name"
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={updateField}
+                    placeholder="Иванов Иван Иванович"
+                    maxLength={150}
+                    required
+                  />
                 </div>
-              )}
 
-              {error && (
-                <div className="org-alert org-alert-error" role="alert">
-                  {error}
-                </div>
-              )}
-
-              {message && (
-                <div className="org-alert org-alert-success" role="status">
-                  {message}
-                </div>
-              )}
-
-              <div className="org-form-actions">
-                <button className="button primary" type="submit">
-                  {isEditing ? "Сохранить изменения" : "Добавить"}
-                </button>
-
-                {isEditing && (
-                  <button
-                    className="button org-delete"
-                    type="button"
-                    onClick={handleDelete}
+                <div className="field">
+                  <label htmlFor="employee-direction">Направление</label>
+                  <select
+                    id="employee-direction"
+                    name="direction"
+                    value={form.direction}
+                    onChange={updateField}
+                    required
                   >
-                    Удалить
-                  </button>
+                    {DIRECTIONS.map((direction) => (
+                      <option key={direction} value={direction}>
+                        {direction}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label htmlFor="employee-department">Подразделение</label>
+                  <select
+                    id="employee-department"
+                    name="departmentId"
+                    value={form.departmentId}
+                    onChange={updateField}
+                    required
+                  >
+                    <option value="">Выберите подразделение</option>
+
+                    {departments.map((department) => (
+                      <option key={department.id} value={department.id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+
+                  <small className="org-help">
+                    Чтобы перенести сотрудника, выберите другое
+                    подразделение и сохраните изменения.
+                  </small>
+                </div>
+
+                <label className="users-checkbox">
+                  <input
+                    type="checkbox"
+                    name="isAdmin"
+                    checked={form.isAdmin}
+                    onChange={updateField}
+                  />
+                  <span>Административный доступ (тестовый признак)</span>
+                </label>
+
+                <div className="users-access-note">
+                  Руководитель назначается на странице «Подразделения».
+                  Перенос сотрудника сам по себе не снимает с него
+                  руководство другими подразделениями.
+                </div>
+
+                {selectedManagedDepartments.length > 0 && (
+                  <div>
+                    <div className="item-title">
+                      Руководит подразделениями
+                    </div>
+
+                    <ul className="users-managed-list">
+                      {selectedManagedDepartments.map((department) => (
+                        <li key={department.id}>{department.name}</li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
 
-                <button
-                  className="button"
-                  type="button"
-                  onClick={cancelForm}
-                >
-                  Отмена
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
+                {error && (
+                  <div className="org-alert org-alert-error" role="alert">
+                    {error}
+                  </div>
+                )}
+
+                {message && (
+                  <div className="org-alert org-alert-success" role="status">
+                    {message}
+                  </div>
+                )}
+
+                <div className="org-form-actions">
+                  <button className="button primary" type="submit">
+                    {isEditing ? "Сохранить изменения" : "Добавить"}
+                  </button>
+
+                  {isEditing && (
+                    <button
+                      className="button org-delete"
+                      type="button"
+                      onClick={handleDelete}
+                    >
+                      Удалить
+                    </button>
+                  )}
+
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={cancelForm}
+                  >
+                    Отмена
+                  </button>
+                </div>
+              </form>
+            </motion.section>
+          )}
+        </AnimatePresence>
       </div>
-    </section>
+    </motion.section>
   );
 }

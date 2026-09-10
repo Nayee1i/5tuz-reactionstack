@@ -4,6 +4,7 @@ import {
   getUpcomingMeetings,
   getMeetingsHistory,
 } from "../../shared/api/meetings.api";
+import { motion } from "framer-motion";
 
 const DEMO_NOTICE =
   "Действие пока недоступно в демо-режиме. Эндпоинты для бэкенда уже подготовлены.";
@@ -212,8 +213,14 @@ export default function MeetingsPage() {
 
   const historyItems = history.data?.items ?? [];
 
+const pageAnimation = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
+  };
+
   return (
-    <section className="page">
+    <motion.section className="page" {...pageAnimation}>
       <header className="page-header">
         <div>
           <h1 className="page-title">Встречи</h1>
@@ -237,7 +244,6 @@ export default function MeetingsPage() {
         >
           Предстоящие
         </button>
-
         <button
           type="button"
           className={activeTab === "history" ? "tab active" : "tab"}
@@ -465,6 +471,6 @@ export default function MeetingsPage() {
           </div>
         </div>
       ) : null}
-    </section>
+    </motion.section>
   );
 }

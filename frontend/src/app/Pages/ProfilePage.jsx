@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useApi } from "../../shared/hooks/useApi";
 import { getProfile, uploadAvatar } from "../../shared/api/profile.api";
+import { motion } from "framer-motion";
 
 function formatDate(value) {
   if (!value) {
@@ -124,6 +125,13 @@ export default function ProfilePage() {
   const { data, loading, error, reload } = useApi(getProfile, []);
   const fileInputRef = useRef(null);
 
+  // Настройки плавного появления и исчезновения страницы (единый стиль для всего приложения)
+  const pageAnimation = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
+  };
+
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
@@ -134,42 +142,39 @@ export default function ProfilePage() {
       return;
     }
 
-    // Пока заглушка — в будущем обновим аватар через API и перезагрузим профиль
     try {
       const result = await uploadAvatar(file);
       console.log("Аватар загружен:", result);
-      // Здесь позже можно будет обновить локальное состояние или вызвать reload()
     } catch (err) {
       console.error(err);
     }
 
-    // Сбросим значение input, чтобы можно было выбрать тот же файл снова
     event.target.value = "";
   };
 
   if (loading) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <div className="card">
           <div className="empty">Загрузка профиля...</div>
         </div>
-      </section>
+      </motion.section>
     );
   }
 
   if (error) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <ErrorState message={error} onRetry={reload} />
-      </section>
+      </motion.section>
     );
   }
 
   if (!data) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <ErrorState message="Данные профиля не получены" onRetry={reload} />
-      </section>
+      </motion.section>
     );
   }
 
@@ -179,7 +184,7 @@ export default function ProfilePage() {
   const inProgressSkills = skills.filter((s) => s.status !== "confirmed");
 
   return (
-    <section className="page">
+    <motion.section className="page" {...pageAnimation}>
       <header className="page-header">
         <div>
           <h1 className="page-title">Профиль</h1>
@@ -423,6 +428,6 @@ export default function ProfilePage() {
           )}
         </section>
       </div>
-    </section>
+    </motion.section>
   );
 }
