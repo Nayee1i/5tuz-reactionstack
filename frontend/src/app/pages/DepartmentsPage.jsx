@@ -90,6 +90,7 @@ export default function DepartmentsPage() {
   const [form, setForm] = useState(() => emptyForm());
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [showForm, setShowForm] = useState(false); // <-- Добавлено
 
   if (!data) {
     return (
@@ -108,7 +109,6 @@ export default function DepartmentsPage() {
   const isEditing = Boolean(form.id);
   const isRoot = isEditing && form.parentId === null;
 
-  // Нельзя перенести подразделение в себя или в своего потомка.
   const excludedParentIds = isEditing
     ? getSubtreeIds(departments, form.id)
     : new Set();
@@ -135,20 +135,20 @@ export default function DepartmentsPage() {
 
   function selectDepartment(department) {
     setForm({ ...department });
+    setShowForm(true); // <-- Показываем форму при выборе
     setError("");
     setMessage("");
   }
 
   function startCreating() {
-    // Если выбрано подразделение, создаём дочернее для него.
     setForm(emptyForm(form.id || "company"));
     setError("");
     setMessage("");
+    setShowForm(true); // <-- Показываем форму
   }
 
   function commit(nextData, successMessage) {
     try {
-      // Сначала сохраняем; при ошибке не показываем ложный успех.
       saveOrganization(nextData);
       setData(nextData);
       setError("");
@@ -262,7 +262,14 @@ export default function DepartmentsPage() {
 
     if (saved) {
       setForm(emptyForm());
+      setShowForm(false); // <-- Скрываем форму после удаления
     }
+  }
+
+  function cancelForm() {
+    setShowForm(false); // <-- Новая функция для отмены
+    setError("");
+    setMessage("");
   }
 
   return (
@@ -305,131 +312,141 @@ export default function DepartmentsPage() {
           />
         </section>
 
-        <section className="card">
-          <div className="card-header">
-            <h2>
-              {isEditing ? "Редактирование" : "Новое подразделение"}
-            </h2>
-          </div>
-
-          <form className="org-form" onSubmit={handleSubmit}>
-            <div className="field">
-              <label htmlFor="department-name">Название</label>
-              <input
-                id="department-name"
-                name="name"
-                value={form.name}
-                onChange={updateField}
-                placeholder="Например, Backend · Team B"
-                maxLength={120}
-                required
-              />
+        {showForm && ( // <-- Условный рендеринг формы
+          <section className="card">
+            <div className="card-header">
+              <h2>
+                {isEditing ? "Редактирование" : "Новое подразделение"}
+              </h2>
             </div>
 
-            <div className="field">
-              <label htmlFor="department-parent">
-                Родительское подразделение
-              </label>
+            <form className="org-form" onSubmit={handleSubmit}>
+              <div className="field">
+                <label htmlFor="department-name">Название</label>
+                <input
+                  id="department-name"
+                  name="name"
+                  value={form.name}
+                  onChange={updateField}
+                  placeholder="Например, Backend · Team B"
+                  maxLength={120}
+                  required
+                />
+              </div>
 
-              <select
-                id="department-parent"
-                name="parentId"
-                value={form.parentId ?? ""}
-                onChange={updateField}
-                disabled={isRoot}
-                required={!isRoot}
-              >
-                {isRoot ? (
-                  <option value="">Корень структуры</option>
-                ) : (
-                  <>
-                    <option value="">Выберите подразделение</option>
-                    {parentOptions.map((department) => (
-                      <option key={department.id} value={department.id}>
-                        {department.name}
-                      </option>
-                    ))}
-                  </>
+              <div className="field">
+                <label htmlFor="department-parent">
+                  Родительское подразделение
+                </label>
+
+                <select
+                  id="department-parent"
+                  name="parentId"
+                  value={form.parentId ?? ""}
+                  onChange={updateField}
+                  disabled={isRoot}
+                  required={!isRoot}
+                >
+                  {isRoot ? (
+                    <option value="">Корень структуры</option>
+                  ) : (
+                    <>
+                      <option value="">Выберите подразделение</option>
+                      {parentOptions.map((department) => (
+                        <option key={department.id} value={department.id}>
+                          {department.name}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </select>
+
+                <small className="org-help">
+                  Смена родителя переносит подразделение вместе со всем
+                  его поддеревом. Корень структуры в этом прототипе фиксирован.
+                </small>
+              </div>
+
+              <div className="field">
+                <label htmlFor="department-manager">Руководитель</label>
+
+                <select
+                  id="department-manager"
+                  name="managerId"
+                  value={form.managerId}
+                  onChange={updateField}
+                >
+                  <option value="">Не назначен</option>
+
+                  {employees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.fullName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {error && (
+                <div className="org-alert org-alert-error" role="alert">
+                  {error}
+                </div>
+              )}
+
+              {message && (
+                <div className="org-alert org-alert-success" role="status">
+                  {message}
+                </div>
+              )}
+
+              <div className="org-form-actions">
+                <button type="submit" className="button primary">
+                  {isEditing ? "Сохранить изменения" : "Создать"}
+                </button>
+
+                {isEditing && !isRoot && (
+                  <button
+                    type="button"
+                    className="button org-delete"
+                    onClick={handleDelete}
+                  >
+                    Удалить
+                  </button>
                 )}
-              </select>
 
-              <small className="org-help">
-                Смена родителя переносит подразделение вместе со всем
-                его поддеревом. Корень структуры в этом прототипе фиксирован.
-              </small>
-            </div>
-
-            <div className="field">
-              <label htmlFor="department-manager">Руководитель</label>
-
-              <select
-                id="department-manager"
-                name="managerId"
-                value={form.managerId}
-                onChange={updateField}
-              >
-                <option value="">Не назначен</option>
-
-                {employees.map((employee) => (
-                  <option key={employee.id} value={employee.id}>
-                    {employee.fullName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {error && (
-              <div className="org-alert org-alert-error" role="alert">
-                {error}
-              </div>
-            )}
-
-            {message && (
-              <div className="org-alert org-alert-success" role="status">
-                {message}
-              </div>
-            )}
-
-            <div className="org-form-actions">
-              <button type="submit" className="button primary">
-                {isEditing ? "Сохранить изменения" : "Создать"}
-              </button>
-
-              {isEditing && !isRoot && (
                 <button
                   type="button"
-                  className="button org-delete"
-                  onClick={handleDelete}
+                  className="button"
+                  onClick={cancelForm}
                 >
-                  Удалить
+                  Отмена
                 </button>
-              )}
-            </div>
-          </form>
+              </div>
+            </form>
 
-          {isEditing && (
-            <div className="org-members">
-              <h3>Сотрудники подразделения</h3>
+            {isEditing && (
+              <div className="org-members">
+                <h3>Сотрудники подразделения</h3>
 
-              {selectedEmployees.length === 0 ? (
-                <div className="empty">
-                  В этом подразделении пока нет сотрудников.
-                </div>
-              ) : (
-                <div className="list">
-                  {selectedEmployees.map((employee) => (
-                    <div className="list-item" key={employee.id}>
-                      <span>{employee.fullName}</span>
-                      <span className="badge info">
-                        {employee.direction}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </section>
+                {selectedEmployees.length === 0 ? (
+                  <div className="empty">
+                    В этом подразделении пока нет сотрудников.
+                  </div>
+                ) : (
+                  <div className="list">
+                    {selectedEmployees.map((employee) => (
+                      <div className="list-item" key={employee.id}>
+                        <span>{employee.fullName}</span>
+                        <span className="badge info">
+                          {employee.direction}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </section>
   );
