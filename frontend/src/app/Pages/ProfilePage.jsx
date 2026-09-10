@@ -291,10 +291,10 @@ export default function ProfilePage() {
               <span className="badge neutral">
                 {achievements.length}{" "}
                 {achievements.length === 1
-                  ? "ачивка"
+                  ? "достижение"
                   : achievements.length < 5
-                    ? "ачивки"
-                    : "ачивок"}
+                    ? "достижения"
+                    : "достижений"}
               </span>
             ) : null}
           </div>
@@ -302,7 +302,7 @@ export default function ProfilePage() {
           {achievements.length === 0 ? (
             <EmptyState>
               Пока нет достижений. Подтвердите первый скилл, чтобы получить
-              первую ачивку.
+              первое достижение.
             </EmptyState>
           ) : (
             <div className="achievements-grid">

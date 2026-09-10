@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { MeetingsStatusProvider } from "../shared/context/meetings-status.context.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import MeetingsPage from "./pages/MeetingsPage.jsx";
@@ -18,7 +19,14 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
 
           {/* Основная часть сайта теперь живёт по адресу /app */}
-          <Route path="/app" element={<AppLayout />}>
+          <Route
+            path="/app"
+            element={
+              <MeetingsStatusProvider>
+                <AppLayout />
+              </MeetingsStatusProvider>
+            }
+          >
             <Route index element={<HomePage />} />
             <Route path="meetings" element={<MeetingsPage />} />
             <Route path="profile" element={<ProfilePage />} />

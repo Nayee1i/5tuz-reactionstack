@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
+import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 
 const navigation = [
   { to: "/app", label: "Главная", end: true },
@@ -7,6 +8,15 @@ const navigation = [
 ];
 
 export default function AppLayout() {
+  const { data: meetingsStatus } = useMeetingsStatus();
+
+  const hasLiveMeeting = Boolean(meetingsStatus?.ongoing);
+  const meetingsBadge = hasLiveMeeting
+    ? "live"
+    : meetingsStatus?.upcomingCount > 0
+      ? meetingsStatus.upcomingCount
+      : null;
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -25,7 +35,20 @@ export default function AppLayout() {
                 `nav-link ${isActive ? "active" : ""}`.trim()
               }
             >
-              {item.label}
+              <span>{item.label}</span>
+
+              {item.to === "/app/meetings" && meetingsBadge ? (
+                <span
+                  className={`nav-badge ${hasLiveMeeting ? "live" : ""}`}
+                  title={
+                    hasLiveMeeting
+                      ? "Сейчас идёт встреча"
+                      : "Есть запланированные встречи"
+                  }
+                >
+                  {hasLiveMeeting ? "●" : meetingsBadge}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </nav>
@@ -41,7 +64,7 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      <div className="workspace">
+      <div className={`workspace ${hasLiveMeeting ? "has-live-banner" : ""}`}>
         <header className="topbar">
           <input
             className="search"
@@ -52,9 +75,6 @@ export default function AppLayout() {
           <div className="topbar-actions">
             <button className="button secondary" type="button">
               Уведомления
-            </button>
-            <button className="button primary" type="button">
-              Новая встреча
             </button>
           </div>
         </header>
