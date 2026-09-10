@@ -1,0 +1,102 @@
+export const profileMock = {
+  id: 1,
+  firstName: "Алексей",
+  lastName: "Ковалёв",
+  fullName: "Алексей Ковалёв",
+  email: "a.kovalev@skillflow.ru",
+  position: "Senior Backend Developer",
+
+  direction: "BACK",
+  department: "Backend Platform",
+  departmentId: 5,
+  company: "SkillFlow Technologies",
+
+  manager: {
+    id: 12,
+    firstName: "Иван",
+    lastName: "Смирнов",
+    fullName: "Иван Смирнов",
+    position: "Engineering Manager",
+  },
+
+  joinedAt: "2022-03-14",
+
+  achievements: [
+    {
+      id: 1,
+      title: "Наставник",
+      description: "Провёл более 10 PR-встреч в качестве наставника",
+      earnedAt: "2026-06-01",
+      icon: "mentor",
+    },
+    {
+      id: 2,
+      title: "3 скилла подряд",
+      description: "Подтвердил 3 скилла без просрочек подряд",
+      earnedAt: "2026-07-15",
+      icon: "streak",
+    },
+    {
+      id: 3,
+      title: "Без просрочек",
+      description: "Ни одной просрочки по плану обучения за квартал",
+      earnedAt: "2026-08-01",
+      icon: "ontime",
+    },
+    {
+      id: 4,
+      title: "Команда месяца",
+      description: "Подразделение показало лучший прогресс в июле",
+      earnedAt: "2026-07-31",
+      icon: "team",
+    },
+  ],
+
+  skills: [
+    {
+      id: 1,
+      name: "REST API",
+      direction: "BACK",
+      progress: 85,
+      status: "almost_confirmed",
+      plannedDate: "2026-10-01",
+      confirmedAt: null,
+    },
+    {
+      id: 2,
+      name: "Docker",
+      direction: "BACK",
+      progress: 58,
+      status: "in_progress",
+      plannedDate: "2026-11-15",
+      confirmedAt: null,
+    },
+    {
+      id: 3,
+      name: "PostgreSQL",
+      direction: "BACK",
+      progress: 34,
+      status: "at_risk",
+      plannedDate: "2026-09-30",
+      confirmedAt: null,
+    },
+    {
+      id: 4,
+      name: "Git",
+      direction: "BACK",
+      progress: 100,
+      status: "confirmed",
+      plannedDate: "2026-05-01",
+      confirmedAt: "2026-04-28",
+    },
+    {
+      id: 5,
+      name: "CI/CD",
+      direction: "BACK",
+      progress: 72,
+      status: "on_track",
+      plannedDate: "2026-12-01",
+      confirmedAt: null,
+    },
+  ],
+};
