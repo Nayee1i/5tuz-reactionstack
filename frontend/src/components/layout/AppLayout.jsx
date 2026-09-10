@@ -1,19 +1,23 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 
-const navigation = [
-  { to: "/", label: "Главная", end: true },
-  { to: "/departments", label: "Подразделения" },
-  { to: "/meetings", label: "Встречи" },
-  { to: "/profile", label: "Профиль" },
-  { to: "/admin/users", label: "Администрирование" },
-  {to: "/directories/skills", label: "Справочник скиллов",},
+const mainNavigation = [
+  { to: "/app", label: "Главная", end: true },
+  { to: "/app/meetings", label: "Встречи" },
+  { to: "/app/departments", label: "Подразделения" },
+  { to: "/app/profile", label: "Профиль" },
+];
+
+const adminNavigation = [
+  { to: "/app/admin/users", label: "Пользователи" },
+  { to: "/app/admin/skills", label: "Справочник скиллов" },
 ];
 
 export default function AppLayout() {
   const { data: meetingsStatus } = useMeetingsStatus();
 
   const hasLiveMeeting = Boolean(meetingsStatus?.ongoing);
+
   const meetingsBadge = hasLiveMeeting
     ? "live"
     : meetingsStatus?.upcomingCount > 0
@@ -29,7 +33,7 @@ export default function AppLayout() {
         </div>
 
         <nav className="nav" aria-label="Основная навигация">
-          {navigation.map((item) => (
+          {mainNavigation.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -55,6 +59,25 @@ export default function AppLayout() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="nav-section">
+          <div className="nav-section-title">Администрирование</div>
+
+          <nav className="nav" aria-label="Администрирование">
+            {adminNavigation.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`.trim()
+                }
+              >
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
+          </nav>
+        </div>
 
         <div className="sidebar-footer">
           <div className="mini-user">

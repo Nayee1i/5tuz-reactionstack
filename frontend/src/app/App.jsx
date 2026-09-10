@@ -13,35 +13,41 @@ import LoginPage from "./pages/LoginPage.jsx";
 export default function App() {
   return (
     <BrowserRouter>
+      <Routes>
+        {/* Корень сайта отправляет на логин */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        <Routes>
-          {/* Корень сайта теперь отправляет на логин */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Страница входа */}
+        <Route path="/login" element={<LoginPage />} />
 
-          {/* Страница входа */}
-          <Route path="/login" element={<LoginPage />} />
+        {/* Основная часть сайта */}
+        <Route
+          path="/app"
+          element={
+            <MeetingsStatusProvider>
+              <AppLayout />
+            </MeetingsStatusProvider>
+          }
+        >
+          <Route index element={<HomePage />} />
+          <Route path="meetings" element={<MeetingsPage />} />
+          <Route path="departments" element={<DepartmentsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
 
-          {/* Основная часть сайта теперь живёт по адресу /app */}
-          <Route
-            path="/app"
-            element={
-              <MeetingsStatusProvider>
-                <AppLayout />
-              </MeetingsStatusProvider>
-            }
-          >
-            <Route index element={<HomePage />} />
-            <Route path="meetings" element={<MeetingsPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-          </Route>
+          {/* Административные разделы */}
+          <Route path="admin/users" element={<AdminUsersPage />} />
+          <Route path="admin/skills" element={<SkillsDirectoryPage />} />
+        </Route>
 
-          {/* Чтобы старые ссылки не ломались */}
-          <Route path="/meetings" element={<Navigate to="/app/meetings" replace />} />
-          <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
+        {/* Чтобы старые ссылки не ломались */}
+        <Route path="/meetings" element={<Navigate to="/app/meetings" replace />} />
+        <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
+        <Route path="/departments" element={<Navigate to="/app/departments" replace />} />
+        <Route path="/admin/users" element={<Navigate to="/app/admin/users" replace />} />
+        <Route path="/admin/skills" element={<Navigate to="/app/admin/skills" replace />} />
 
-          {/* 404 */}
-          <Route path="*" element={<NotFoundPage />} />
-
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
