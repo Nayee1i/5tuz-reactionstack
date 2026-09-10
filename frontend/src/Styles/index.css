@@ -1246,6 +1246,526 @@ h3 {
   }
 }
 
+.org-alert-error {
+  background: rgba(235, 87, 87, 0.1);
+  border: 1px solid rgba(235, 87, 87, 0.3);
+  color: #f1b3b3;
+}
+
+.org-alert-success {
+  background: rgba(76, 183, 130, 0.1);
+  border: 1px solid rgba(76, 183, 130, 0.3);
+  color: #a3e4c5;
+}
+
+.org-demo-note {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--accent-subtle);
+  border: 1px solid rgba(94, 106, 210, 0.2);
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.org-help {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+}
+
+/* ============================= /
+/ Forms & Inputs (Extended) /
+/ ============================= */
+
+.org-form {
+  display: grid;
+  gap: 16px;
+}
+
+.org-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.users-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.users-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .users-layout,
+  .org-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .users-filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+.users-access-note {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+}
+
+.users-managed-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 4px;
+}
+  .page-title {
+    font-size: 18px;
+  }
+  
+  .skills-directory h1 {
+    font-size: 18px;
+  }
+
+.users-managed-list li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-left: 12px;
+  position: relative;
+}
+
+.users-managed-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--text-tertiary);
+}
+
+/* ============================= /
+/ Users Page Layout & Table /
+/ ============================= */
+
+.users-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.users-filters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.users-filter-note {
+  margin-bottom: 12px;
+}
+
+.users-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev-1);
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.users-table th {
+  padding: 10px 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  position: sticky;
+  top: 0;
+}
+
+.users-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.users-table tbody tr.is-selected {
+  background: var(--accent-subtle);
+}
+
+.users-table tbody tr:hover:not(.is-selected) {
+  background: var(--bg-hover);
+}
+
+.users-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ============================= /
+/ Departments Page Layout & Tree /
+/ ============================= */
+
+.org-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.org-tree-panel {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.org-tree {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.org-tree .org-tree {
+  padding-left: 16px;
+  margin-top: 4px;
+  border-left: 1px solid var(--border);
+}
+
+.org-node {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.org-node:hover {
+  background: var(--bg-hover);
+}
+
+.org-node.is-selected {
+  background: var(--accent-subtle);
+  border-color: rgba(94, 106, 210, 0.3);
+}
+
+.org-node-title {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.org-node-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.org-members {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.org-members h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ============================= /
+/ Skills Directory (Dark Theme Adapted) /
+/ ============================= */
+
+.skills-directory {
+  display: grid;
+  gap: 22px;
+  color: var(--text);
+}
+
+.skills-directory .sd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.skills-directory h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-weight: 600;
+}
+
+.skills-directory h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.skills-directory .sd-header p {
+  margin: 4px 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.skills-directory .sd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+
+.skills-directory .sd-panel {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev-1);
+}
+
+.skills-directory .sd-panel-heading,
+.skills-directory .sd-skill-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.skills-directory .sd-counter,
+.skills-directory .sd-tag {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.skills-directory .sd-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.skills-directory .sd-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.skills-directory .sd-field input,
+.skills-directory .sd-field select,
+.skills-directory .sd-field textarea {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  outline: none;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.skills-directory .sd-field textarea {
+  height: auto;
+  min-height: 80px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.skills-directory .sd-field select {
+  padding-right: 32px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8f98' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.skills-directory .sd-field input::placeholder,
+.skills-directory .sd-field textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.skills-directory .sd-field input:focus,
+.skills-directory .sd-field select:focus,
+.skills-directory .sd-field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.skills-directory .sd-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.skills-directory .sd-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skills-directory .sd-skill {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev-1);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.skills-directory .sd-skill:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.skills-directory .sd-skill.sd-selected {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+}
+
+.skills-directory .sd-description {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.skills-directory .sd-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skills-directory .sd-button {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.skills-directory .sd-primary {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.skills-directory .sd-primary:hover {
+  background: var(--accent-hover);
+}
+
+.skills-directory .sd-danger {
+  background: transparent;
+  border: 1px solid rgba(235, 87, 87, 0.3);
+  color: #f1b3b3;
+}
+
+.skills-directory .sd-danger:hover {
+  background: rgba(235, 87, 87, 0.1);
+  border-color: rgba(235, 87, 87, 0.5);
+}
+
+.skills-directory .sd-notice {
+  padding: 10px 12px;
+  border: 1px solid rgba(94, 106, 210, 0.2);
+  border-radius: var(--radius);
+  background: var(--accent-subtle);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.skills-directory .sd-error {
+  background: rgba(235, 87, 87, 0.1);
+  border-color: rgba(235, 87, 87, 0.3);
+  color: #f1b3b3;
+}
+
+.skills-directory .sd-success {
+  background: rgba(76, 183, 130, 0.1);
+  border-color: rgba(76, 183, 130, 0.3);
+  color: #a3e4c5;
+}
+
+.skills-directory .sd-empty {
+  padding: 24px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: 13px;
+}
+
+/* ============================= /
+/ Animation and responsive /
+/ ============================= */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (max-width: 1100px) {
+  .skills-directory .sd-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 1000px) {
   .app-shell {
     grid-template-columns: 1fr;
