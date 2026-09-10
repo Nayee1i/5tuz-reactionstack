@@ -1,24 +1,22 @@
 services:
-  # База данных PostgreSQL
   postgres:
-    image: postgres:15-alpine
-    container_name: hackathon_db
+    image: postgres:16
     environment:
       POSTGRES_DB: tomsk_org
       POSTGRES_USER: hackathon
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-hackathon2026}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:?Set DEMO_PASSWORD in .env}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+      - pr_postgres16_data:/var/lib/postgresql/data
+      - ./db:/scripts:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U hackathon -d tomsk_org"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # Redis для кэширования (опционально, но полезно)
   redis:
     image: redis:7-alpine
     container_name: hackathon_redis
@@ -26,16 +24,15 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
-  # Backend (Node.js)
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: hackathon_backend
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://hackathon:${DB_PASSWORD:-hackathon2026}@postgres:5432/tomsk_org
+      DATABASE_URL: "postgresql://pr_app:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}@postgres:5432/tomsk_org"
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
     ports:
@@ -50,11 +47,10 @@ services:
       - ./backend:/app
       - /app/node_modules
 
-  # Frontend (React)
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: hackathon_frontend
     ports:
       - "3000:3000"
@@ -67,7 +63,6 @@ services:
       - ./frontend:/app
       - /app/node_modules
 
-  # Nginx как reverse proxy
   nginx:
     image: nginx:alpine
     container_name: hackathon_nginx
@@ -84,3 +79,4 @@ services:
 
 volumes:
   postgres_data:
+  pr_postgres16_data:
