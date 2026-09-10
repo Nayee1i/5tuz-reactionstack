@@ -1,5 +1,7 @@
 import { useApi } from "../../shared/hooks/useApi";
 import { getDashboard } from "../../shared/api/dashboard.api";
+import { useNavigate } from "react-router-dom";
+import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -192,6 +194,9 @@ function ErrorState({ message, onRetry }) {
 
 export default function HomePage() {
   const { data, loading, error, reload } = useApi(getDashboard, []);
+  const navigate = useNavigate();
+  const { data: meetingsStatus } = useMeetingsStatus();
+  const ongoingMeeting = meetingsStatus?.ongoing;
 
   if (loading) {
     return (
@@ -226,7 +231,6 @@ export default function HomePage() {
   const meetings = Array.isArray(data.meetings) ? data.meetings : [];
   const problems = Array.isArray(data.problems) ? data.problems : [];
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
-
   const displayName = user.firstName || user.fullName || "пользователь";
 
   const subtitle = [user.direction, user.department]
@@ -248,14 +252,32 @@ export default function HomePage() {
 
         <div className="page-actions">
           <button className="button secondary" type="button">
-            Открыть аналитику
-          </button>
-
-          <button className="button primary" type="button">
-            Новая встреча
+            Открыть статистику
           </button>
         </div>
       </header>
+
+      {ongoingMeeting ? (
+        <div className="live-banner-fixed">
+          <div className="live-banner-info">
+            <span className="live-dot" aria-hidden="true" />
+            <strong>Сейчас идёт встреча: {ongoingMeeting.title}</strong>
+
+            <div className="meeting-meta">
+              {ongoingMeeting.type} · {ongoingMeeting.format} · Участник:{" "}
+              {ongoingMeeting.participant?.fullName || "—"}
+            </div>
+          </div>
+
+          <button
+            className="button primary"
+            type="button"
+            onClick={() => navigate("/app/meetings")}
+          >
+            Перейти к встрече
+          </button>
+        </div>
+      ) : null}
 
       <div className="grid">
         <section className="card span-12">
@@ -392,7 +414,7 @@ export default function HomePage() {
             </button>
 
             <button className="button secondary full" type="button">
-              Провести 1:1
+              Провести встречу 1:1
             </button>
 
             <button className="button secondary full" type="button">
