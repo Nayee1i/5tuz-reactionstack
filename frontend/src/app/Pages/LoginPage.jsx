@@ -22,14 +22,14 @@ export default function LoginPage() {
     }));
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-
-    if (!values.login.trim() || !values.password.trim()) {
-      setError("Введите логин и пароль");
-      return;
-    }
+const handleSubmit = async (event) => {
+  event.preventDefault();
+  setError("");
+  
+  if (!values.login.trim() || !values.password.trim()) {
+    setError("Введите логин и пароль");
+    return;
+  }
 
     setIsLoading(true);
 
@@ -58,7 +58,7 @@ export default function LoginPage() {
 
       // Пока имитируем успешный вход.
       await new Promise((resolve) => setTimeout(resolve, 800));
-      navigate("/app", { replace: true });
+      navigate("/", { replace: true });
 
     } catch {
       setError("Неверный логин или пароль");
