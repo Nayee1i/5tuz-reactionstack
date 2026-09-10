@@ -1,137 +1,99 @@
 import { useState } from "react";
 import {
-  loadOrganization,
-  saveOrganization,
-} from "../../data/organizationStore";
+  loadSkills,
+  saveSkills,
+  SKILL_DIRECTIONS,
+} from "../../data/skillsStore";
 
-const DIRECTIONS = ["BACK", "FRONT", "QA"];
-
-function emptyForm(departmentId = "") {
+function emptyForm(direction = "BACK") {
   return {
     id: "",
-    fullName: "",
-    direction: "BACK",
-    departmentId,
-    isAdmin: false,
+    name: "",
+    direction,
+    description: "",
   };
 }
 
-export default function AdminUsersPage() {
+export default function SkillsDirectoryPage() {
   const [initial] = useState(() => {
     try {
-      return {
-        data: loadOrganization(),
-        error: "",
-      };
+      return { skills: loadSkills(), error: "" };
     } catch {
       return {
-        data: null,
+        skills: null,
         error:
-          "Не удалось загрузить пользователей. Проверьте доступ к хранилищу браузера и сохранённые данные.",
+          "Не удалось загрузить справочник. Проверьте сохранённые данные и доступ к хранилищу браузера.",
       };
     }
   });
 
-  const [data, setData] = useState(initial.data);
-
-  const [form, setForm] = useState(() =>
-    emptyForm(initial.data?.departments[0]?.id || "")
-  );
-
+  const [skills, setSkills] = useState(initial.skills);
+  const [form, setForm] = useState(() => emptyForm());
   const [search, setSearch] = useState("");
   const [directionFilter, setDirectionFilter] = useState("");
-  const [departmentFilter, setDepartmentFilter] = useState("");
-
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [showForm, setShowForm] = useState(false); // <-- Добавлено
+  const [showForm, setShowForm] = useState(false); // <-- Добавлено состояние видимости
 
-  if (!data) {
+  if (!skills) {
     return (
-      <section className="page">
-        <h1 className="page-title">Пользователи</h1>
-
-        <div className="org-alert org-alert-error" role="alert">
+      <section className="skills-directory">
+        <h1>Справочник скиллов</h1>
+        <div className="sd-notice sd-error" role="alert">
           {initial.error}
         </div>
       </section>
     );
   }
 
-  const { employees, departments } = data;
   const isEditing = Boolean(form.id);
-
-  function departmentName(id) {
-    return (
-      departments.find((department) => department.id === id)?.name ||
-      "Не назначено"
-    );
-  }
-
-  function managedDepartments(employeeId) {
-    return departments.filter(
-      (department) => department.managerId === employeeId
-    );
-  }
-
   const query = search.trim().toLocaleLowerCase("ru");
 
-  const filteredEmployees = employees.filter((employee) => {
-    const matchesSearch = employee.fullName
-      .toLocaleLowerCase("ru")
-      .includes(query);
+  const filteredSkills = skills
+    .filter((skill) => {
+      const matchesDirection =
+        !directionFilter || skill.direction === directionFilter;
 
-    const matchesDirection =
-      !directionFilter || employee.direction === directionFilter;
+      const matchesSearch = `${skill.name} ${skill.description}`
+        .toLocaleLowerCase("ru")
+        .includes(query);
 
-    const matchesDepartment =
-      !departmentFilter || employee.departmentId === departmentFilter;
+      return matchesDirection && matchesSearch;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "ru"));
 
-    return matchesSearch && matchesDirection && matchesDepartment;
-  });
-
-  const selectedManagedDepartments = isEditing
-    ? managedDepartments(form.id)
-    : [];
-
-  function updateField(event) {
-    const { name, type, checked, value } = event.target;
-
-    setForm((current) => ({
-      ...current,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-
+  function clearMessages() {
     setError("");
     setMessage("");
   }
 
   function startCreating() {
-    setForm(
-      emptyForm(departmentFilter || departments[0]?.id || "")
-    );
-    setError("");
-    setMessage("");
+    setForm(emptyForm(directionFilter || "BACK"));
+    clearMessages();
     setShowForm(true); // <-- Показываем форму
   }
 
-  function editEmployee(employee) {
-    setForm({
-      id: employee.id,
-      fullName: employee.fullName,
-      direction: employee.direction,
-      departmentId: employee.departmentId,
-      isAdmin: Boolean(employee.isAdmin),
-    });
+  function editSkill(skill) {
+    setForm({ ...skill });
+    clearMessages();
     setShowForm(true); // <-- Показываем форму при редактировании
-    setError("");
-    setMessage("");
   }
 
-  function commit(nextData, successMessage) {
+  function updateField(event) {
+    const { name, value } = event.target;
+
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+    }));
+
+    clearMessages();
+  }
+
+  function commit(nextSkills, successMessage) {
     try {
-      saveOrganization(nextData);
-      setData(nextData);
+      saveSkills(nextSkills);
+      setSkills(nextSkills);
       setError("");
       setMessage(successMessage);
       return true;
@@ -146,172 +108,134 @@ export default function AdminUsersPage() {
 
   function handleSubmit(event) {
     event.preventDefault();
+    clearMessages();
 
-    setError("");
-    setMessage("");
+    const name = form.name.trim();
+    const description = form.description.trim();
 
-    const fullName = form.fullName.trim();
-
-    if (!fullName) {
-      setError("Введите ФИО сотрудника.");
+    if (!name) {
+      setError("Введите название скилла.");
       return;
     }
 
-    if (!DIRECTIONS.includes(form.direction)) {
+    if (!SKILL_DIRECTIONS.includes(form.direction)) {
       setError("Выберите направление.");
       return;
     }
 
-    const departmentExists = departments.some(
-      (department) => department.id === form.departmentId
+    // В прототипе запрещаем одинаковые названия внутри направления.
+    const duplicate = skills.some(
+      (skill) =>
+        skill.id !== form.id &&
+        skill.direction === form.direction &&
+        skill.name.trim().toLocaleLowerCase("ru") ===
+          name.toLocaleLowerCase("ru")
     );
 
-    if (!departmentExists) {
-      setError("Выберите существующее подразделение.");
+    if (duplicate) {
+      setError("Скилл с таким названием уже есть в этом направлении.");
       return;
     }
 
-    const existingEmployee = employees.find(
-      (employee) => employee.id === form.id
-    );
-
-    if (isEditing && !existingEmployee) {
-      setError("Пользователь не найден. Обновите страницу.");
+    if (isEditing && !skills.some((skill) => skill.id === form.id)) {
+      setError("Скилл не найден. Обновите страницу.");
       return;
     }
 
-    const employee = {
-      ...existingEmployee,
+    const skill = {
       id:
         form.id ||
-        `employee-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 10)}`,
-      fullName,
+        `skill-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      name,
       direction: form.direction,
-      departmentId: form.departmentId,
-      isAdmin: form.isAdmin,
+      description,
     };
 
-    const nextEmployees = isEditing
-      ? employees.map((item) =>
-          item.id === employee.id ? employee : item
-        )
-      : [...employees, employee];
+    const nextSkills = isEditing
+      ? skills.map((item) => (item.id === skill.id ? skill : item))
+      : [...skills, skill];
 
     const saved = commit(
-      { ...data, employees: nextEmployees },
-      isEditing
-        ? "Данные пользователя сохранены."
-        : "Пользователь добавлен."
+      nextSkills,
+      isEditing ? "Скилл обновлён." : "Скилл добавлен."
     );
 
     if (saved) {
-      setForm({
-        id: employee.id,
-        fullName: employee.fullName,
-        direction: employee.direction,
-        departmentId: employee.departmentId,
-        isAdmin: employee.isAdmin,
-      });
+      setForm(skill);
     }
   }
 
   function handleDelete() {
     if (!form.id) return;
 
-    setError("");
-    setMessage("");
+    clearMessages();
 
-    const managed = managedDepartments(form.id);
-
-    if (managed.length > 0) {
-      setError(
-        `Пользователь руководит подразделениями: ${managed
-          .map((department) => department.name)
-          .join(", ")}. Сначала назначьте других руководителей в оргструктуре.`
-      );
-      return;
-    }
-
-    if (!window.confirm(`Удалить пользователя «${form.fullName}»?`)) {
+    if (!window.confirm(`Удалить скилл «${form.name}» из справочника?`)) {
       return;
     }
 
     const saved = commit(
-      {
-        ...data,
-        employees: employees.filter(
-          (employee) => employee.id !== form.id
-        ),
-      },
-      "Пользователь удалён."
+      skills.filter((skill) => skill.id !== form.id),
+      "Скилл удалён."
     );
 
     if (saved) {
-      setForm(
-        emptyForm(departmentFilter || departments[0]?.id || "")
-      );
+      setForm(emptyForm(directionFilter || "BACK"));
       setShowForm(false); // <-- Скрываем форму после удаления
     }
   }
 
   function cancelForm() {
-    setShowForm(false); // <-- Новая функция для отмены
-    setError("");
-    setMessage("");
+    setShowForm(false); // <-- Новая функция для закрытия формы
+    clearMessages();
+    setForm(emptyForm(directionFilter || "BACK"));
   }
 
   return (
-    <section className="page">
-      <div className="page-header">
+    <section className="skills-directory">
+      <header className="sd-header">
         <div>
-          <h1 className="page-title">Пользователи</h1>
-          <p className="page-subtitle">
-            Администрирование пользователей и распределение по подразделениям
-          </p>
+          <h1>Справочник скиллов</h1>
+          <p>Технические навыки по направлениям BACK, FRONT и QA</p>
         </div>
 
         <button
-          className="button primary"
+          className="sd-button sd-primary"
           type="button"
           onClick={startCreating}
         >
-          + Пользователь
+          + Добавить скилл
         </button>
+      </header>
+
+      <div className="sd-notice">
+        Деморежим администратора. Данные сохраняются в этом браузере.
+        Связи с планами обучения и встречами пока не проверяются.
       </div>
 
-      <div className="org-demo-note">
-        Деморежим администратора. Здесь создаются тестовые записи
-        сотрудников, а не реальные учётные записи для входа.
-        Изменения доступны только в этом браузере.
-      </div>
-
-      <div className="users-layout">
-        <section className="card">
-          <div className="card-header">
-            <h2>Список пользователей</h2>
-            <span className="badge info">
-              {filteredEmployees.length} / {employees.length}
+      <div className="sd-layout">
+        <section className="sd-panel">
+          <div className="sd-panel-heading">
+            <h2>Навыки</h2>
+            <span className="sd-counter">
+              {filteredSkills.length} / {skills.length}
             </span>
           </div>
 
-          <div className="users-filters">
-            <div className="field">
-              <label htmlFor="users-search">Поиск по ФИО</label>
+          <div className="sd-filters">
+            <label className="sd-field">
+              <span>Поиск</span>
               <input
-                id="users-search"
                 type="search"
-                placeholder="Введите имя сотрудника"
+                placeholder="Название или описание"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
               />
-            </div>
+            </label>
 
-            <div className="field">
-              <label htmlFor="users-direction">Направление</label>
+            <label className="sd-field">
+              <span>Направление</span>
               <select
-                id="users-direction"
                 value={directionFilter}
                 onChange={(event) =>
                   setDirectionFilter(event.target.value)
@@ -319,239 +243,111 @@ export default function AdminUsersPage() {
               >
                 <option value="">Все направления</option>
 
-                {DIRECTIONS.map((direction) => (
+                {SKILL_DIRECTIONS.map((direction) => (
                   <option key={direction} value={direction}>
                     {direction}
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div className="field">
-              <label htmlFor="users-department">Подразделение</label>
-              <select
-                id="users-department"
-                value={departmentFilter}
-                onChange={(event) =>
-                  setDepartmentFilter(event.target.value)
-                }
-              >
-                <option value="">Все подразделения</option>
-
-                {departments.map((department) => (
-                  <option key={department.id} value={department.id}>
-                    {department.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            </label>
           </div>
 
-          <p className="org-help users-filter-note">
-            Фильтр подразделения не включает дочерние подразделения.
-          </p>
-
-          {filteredEmployees.length === 0 ? (
-            <div className="empty">
-              Пользователи не найдены. Измените фильтры или добавьте
-              пользователя.
+          {filteredSkills.length === 0 ? (
+            <div className="sd-empty">
+              Скиллы не найдены. Измените фильтры или добавьте новый.
             </div>
           ) : (
-            <div
-              className="users-table-wrap"
-              role="region"
-              aria-label="Таблица пользователей"
-              tabIndex={0}
-            >
-              <table className="users-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Сотрудник</th>
-                    <th scope="col">Подразделение</th>
-                    <th scope="col">Статус</th>
-                    <th scope="col">Действие</th>
-                  </tr>
-                </thead>
+            <ul className="sd-list">
+              {filteredSkills.map((skill) => (
+                <li key={skill.id}>
+                  <button
+                    type="button"
+                    className={`sd-skill ${
+                      form.id === skill.id ? "sd-selected" : ""
+                    }`}
+                    aria-pressed={form.id === skill.id}
+                    onClick={() => editSkill(skill)}
+                  >
+                    <span className="sd-skill-heading">
+                      <strong>{skill.name}</strong>
+                      <span className="sd-tag">{skill.direction}</span>
+                    </span>
 
-                <tbody>
-                  {filteredEmployees.map((employee) => {
-                    const managed = managedDepartments(employee.id);
-
-                    return (
-                      <tr
-                        key={employee.id}
-                        className={
-                          form.id === employee.id ? "is-selected" : ""
-                        }
-                      >
-                        <td>
-                          <div className="item-title">
-                            {employee.fullName}
-                          </div>
-                          <div className="item-meta">
-                            {employee.direction}
-                          </div>
-                        </td>
-
-                        <td>
-                          {departmentName(employee.departmentId)}
-                        </td>
-
-                        <td>
-                          <div className="users-statuses">
-                            {employee.isAdmin && (
-                              <span className="badge info">
-                                Администратор
-                              </span>
-                            )}
-
-                            {managed.length > 0 && (
-                              <span className="badge success">
-                                Руководитель
-                              </span>
-                            )}
-
-                            {!employee.isAdmin &&
-                              managed.length === 0 && (
-                                <span className="badge neutral">
-                                  Сотрудник
-                                </span>
-                              )}
-                          </div>
-                        </td>
-
-                        <td>
-                          <button
-                            type="button"
-                            className="link-button"
-                            aria-label={`Редактировать: ${employee.fullName}`}
-                            onClick={() => editEmployee(employee)}
-                          >
-                            Изменить
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    <span className="sd-description">
+                      {skill.description || "Без описания"}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </section>
 
-        {showForm && ( // <-- Условный рендеринг формы
-          <section className="card">
-            <div className="card-header">
-              <h2>
-                {isEditing ? "Редактирование пользователя" : "Новый пользователь"}
-              </h2>
-            </div>
+        {showForm && ( // <-- Условный рендеринг правой панели с формой
+          <section className="sd-panel">
+            <h2>{isEditing ? "Редактирование скилла" : "Новый скилл"}</h2>
 
-            <form className="org-form" onSubmit={handleSubmit}>
-              <div className="field">
-                <label htmlFor="employee-name">ФИО</label>
+            <form className="sd-form" onSubmit={handleSubmit}>
+              <label className="sd-field">
+                <span>Название</span>
                 <input
-                  id="employee-name"
-                  name="fullName"
-                  value={form.fullName}
+                  name="name"
+                  value={form.name}
                   onChange={updateField}
-                  placeholder="Иванов Иван Иванович"
-                  maxLength={150}
+                  placeholder="Например, PostgreSQL"
+                  maxLength={120}
                   required
                 />
-              </div>
+              </label>
 
-              <div className="field">
-                <label htmlFor="employee-direction">Направление</label>
+              <label className="sd-field">
+                <span>Направление</span>
                 <select
-                  id="employee-direction"
                   name="direction"
                   value={form.direction}
                   onChange={updateField}
                   required
                 >
-                  {DIRECTIONS.map((direction) => (
+                  {SKILL_DIRECTIONS.map((direction) => (
                     <option key={direction} value={direction}>
                       {direction}
                     </option>
                   ))}
                 </select>
-              </div>
-
-              <div className="field">
-                <label htmlFor="employee-department">Подразделение</label>
-                <select
-                  id="employee-department"
-                  name="departmentId"
-                  value={form.departmentId}
-                  onChange={updateField}
-                  required
-                >
-                  <option value="">Выберите подразделение</option>
-
-                  {departments.map((department) => (
-                    <option key={department.id} value={department.id}>
-                      {department.name}
-                    </option>
-                  ))}
-                </select>
-
-                <small className="org-help">
-                  Чтобы перенести сотрудника, выберите другое
-                  подразделение и сохраните изменения.
-                </small>
-              </div>
-
-              <label className="users-checkbox">
-                <input
-                  type="checkbox"
-                  name="isAdmin"
-                  checked={form.isAdmin}
-                  onChange={updateField}
-                />
-                <span>Административный доступ (тестовый признак)</span>
               </label>
 
-              <div className="users-access-note">
-                Руководитель назначается на странице «Подразделения».
-                Перенос сотрудника сам по себе не снимает с него
-                руководство другими подразделениями.
-              </div>
-
-              {selectedManagedDepartments.length > 0 && (
-                <div>
-                  <div className="item-title">
-                    Руководит подразделениями
-                  </div>
-
-                  <ul className="users-managed-list">
-                    {selectedManagedDepartments.map((department) => (
-                      <li key={department.id}>{department.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <label className="sd-field">
+                <span>Описание</span>
+                <textarea
+                  name="description"
+                  value={form.description}
+                  onChange={updateField}
+                  placeholder="Что входит в этот навык"
+                  rows={5}
+                  maxLength={2000}
+                />
+              </label>
 
               {error && (
-                <div className="org-alert org-alert-error" role="alert">
+                <div className="sd-notice sd-error" role="alert">
                   {error}
                 </div>
               )}
 
               {message && (
-                <div className="org-alert org-alert-success" role="status">
+                <div className="sd-notice sd-success" role="status">
                   {message}
                 </div>
               )}
 
-              <div className="org-form-actions">
-                <button className="button primary" type="submit">
-                  {isEditing ? "Сохранить изменения" : "Добавить"}
+              <div className="sd-actions">
+                <button className="sd-button sd-primary" type="submit">
+                  {isEditing ? "Сохранить" : "Добавить"}
                 </button>
 
                 {isEditing && (
                   <button
-                    className="button org-delete"
+                    className="sd-button sd-danger"
                     type="button"
                     onClick={handleDelete}
                   >
@@ -560,7 +356,7 @@ export default function AdminUsersPage() {
                 )}
 
                 <button
-                  className="button"
+                  className="sd-button"
                   type="button"
                   onClick={cancelForm}
                 >
