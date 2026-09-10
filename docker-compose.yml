@@ -32,7 +32,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: "postgresql://postgres:pHbaQgegqELmViKiYAxIKSsgUYdycDuj@altaria.proxy.rlwy.net:58643/railway"
+      DATABASE_URL: "postgresql://postgres:pHbaQgegqELmViKiYAxIKSsgUYdycDuj@altaria.proxy.rlwy.net:58643/railway?sslmode=require"
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
     ports:
