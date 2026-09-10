@@ -1,5 +1,5 @@
 // backend/src/index.js
-import meetingsRouter from './api/routes/meetings.js';
+// import meetingsRouter from './api/routes/meetings.js';
 
 
 const express = require('express');
@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-app.use('/api/meetings', meetingsRouter);
+// app.use('/api/meetings', meetingsRouter);
 
 
 app.get('/api/health', (req, res) => {
