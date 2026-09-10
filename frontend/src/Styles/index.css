@@ -792,3 +792,241 @@ h3 {
     justify-content: space-between;
   }
 }
+
+/* ============================= */
+/* Profile page                  */
+/* ============================= */
+
+.profile-hero {
+  display: grid;
+  gap: 20px;
+}
+
+.profile-hero-top {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.avatar-wrapper {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.avatar-large {
+  width: 80px;
+  height: 80px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  display: grid;
+  place-items: center;
+}
+
+.avatar-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  display: block;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+  border-radius: var(--radius-md);
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.profile-hero-info {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.profile-position {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.profile-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.profile-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.profile-stat {
+  display: grid;
+  gap: 2px;
+}
+
+.profile-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.profile-stat-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Info grid */
+
+.info-grid {
+  display: grid;
+  gap: 0;
+}
+
+.info-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: baseline;
+}
+
+.info-row:last-child {
+  border-bottom: 0;
+}
+
+.info-label {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* Achievements */
+
+.achievements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.achievement {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elev-2);
+  transition: border-color 0.12s ease;
+}
+
+.achievement:hover {
+  border-color: var(--border-strong);
+}
+
+.achievement-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.achievement-icon-inner {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.achievement-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.achievement-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.achievement-description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.achievement-meta {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+.skill-meta {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+@media (max-width: 640px) {
+  .profile-hero-top {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .profile-badges {
+    justify-content: center;
+  }
+
+  .info-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .profile-hero-stats {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

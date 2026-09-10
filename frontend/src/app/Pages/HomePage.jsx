@@ -248,11 +248,7 @@ export default function HomePage() {
 
         <div className="page-actions">
           <button className="button secondary" type="button">
-            Открыть аналитику
-          </button>
-
-          <button className="button primary" type="button">
-            Новая встреча
+            Открыть статистику
           </button>
         </div>
       </header>
@@ -392,7 +388,7 @@ export default function HomePage() {
             </button>
 
             <button className="button secondary full" type="button">
-              Провести 1:1
+              Провести встречу 1:1
             </button>
 
             <button className="button secondary full" type="button">
