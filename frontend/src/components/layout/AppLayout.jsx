@@ -5,6 +5,7 @@ const navigation = [
   { to: "/departments", label: "Подразделения" },
   { to: "/meetings", label: "Встречи" },
   { to: "/profile", label: "Профиль" },
+  { to: "/admin/users", label: "Администрирование" },
 ];
 
 export default function AppLayout() {
