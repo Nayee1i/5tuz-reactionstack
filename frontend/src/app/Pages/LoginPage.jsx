@@ -33,38 +33,36 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    try {
-      // TODO: заменить на реальный запрос к бэкенду.
-      //
-      // Пример:
-      //
-      // const response = await fetch("/api/auth/login", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     login: values.login,
-      //     password: values.password,
-      //   }),
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error("Неверный логин или пароль");
-      // }
-      //
-      // const data = await response.json();
-      // Здесь можно сохранить токен или информацию о пользователе.
+      try {
+    // Стучимся на бэкенд. Vite сам перенаправит /api на localhost:3001
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        login: values.login,
+        password: values.password,
+      }),
+    });
 
-      // Пока имитируем успешный вход.
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      navigate("/", { replace: true });
+    const data = await response.json();
 
-    } catch {
-      setError("Неверный логин или пароль");
-    } finally {
-      setIsLoading(false);
+    // Если бэкенд вернул ошибку (например, неверный пароль)
+    if (!response.ok) {
+      throw new Error(data.error || 'Неверный логин или пароль');
     }
+
+    // Сохраняем "пропуск" (токен) и данные юзера в кармашек браузера (localStorage)
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+
+    // Пути назад на главную
+    navigate('/', { replace: true });
+    
+  } catch (err) {
+    // Если произошла ошибка, показываем её под формой
+    setError(err.message || 'Ошибка соединения с сервером');
+  } finally {
+    setIsLoading(false);
   };
 
   return (

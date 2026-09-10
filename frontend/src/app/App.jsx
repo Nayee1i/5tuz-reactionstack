@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "../components/layout/AppLayout.jsx";
-import HomePage from "./pages/HomePage.jsx";
-import MeetingsPage from "./pages/MeetingsPage.jsx";
-import ProfilePage from "./pages/ProfilePage.jsx";
-import NotFoundPage from "./pages/NotFoundPage.jsx";
-import LoginPage from "./pages/LoginPage.jsx";
+import HomePage from "./Pages/HomePage.jsx";
+import MeetingsPage from "./Pages/MeetingsPage.jsx";
+import ProfilePage from "./Pages/ProfilePage.jsx";
+import NotFoundPage from "./Pages/NotFoundPage.jsx";
+import LoginPage from "./Pages/LoginPage.jsx";
 
 export default function App() {
   return (
