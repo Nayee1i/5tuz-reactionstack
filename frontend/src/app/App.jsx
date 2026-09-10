@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { MeetingsStatusProvider } from "../shared/context/meetings-status.context.jsx";
+import { MeetingsStatusProvider } from "./../shared/context/meetings-status.context.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import MeetingsPage from "./pages/MeetingsPage.jsx";
