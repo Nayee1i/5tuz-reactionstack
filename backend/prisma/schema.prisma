@@ -1,0 +1,27 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["pr"]
+}
+
+model users {
+  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  login          String   @unique
+  password_hash  String
+  full_name      String
+  direction_id   String @db.Uuid
+  department_id  String @db.Uuid
+  is_admin       Boolean  @default(false)
+  is_active      Boolean  @default(true)
+  auth_version   Int      @default(1)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("users")
+  @@schema("pr")
+}
