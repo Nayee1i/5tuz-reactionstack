@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Берется из docker-compose
+}
+
+model User {
+  id            String   @id @default(uuid())
+  fullName      String
+  email         String   @unique
+  passwordHash  String
+  direction     String   // BACK, FRONT, QA
+  isSystemAdmin Boolean  @default(false) // Глобальный админ
+
+  departmentId  String?
+  department    Department? @relation(fields: [departmentId], references: [id])
+
+  // Подразделения, которыми этот юзер руководит
+  managedDepartments Department[] @relation("DepartmentManager")
+
+  @@map("users")
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+
+  // Связь для дерева
+  parentId    String?
+  parent      Department?  @relation("DepartmentTree", fields: [parentId], references: [id])
+  children    Department[] @relation("DepartmentTree")
+
+  // Руководитель
+  managerId   String?
+  manager     User?    @relation("DepartmentManager", fields: [managerId], references: [id])
+
+  users       User[]
+
+  @@map("departments")
+}
