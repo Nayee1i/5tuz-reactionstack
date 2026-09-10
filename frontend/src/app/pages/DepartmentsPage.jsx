@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   getSubtreeIds,
   loadOrganization,
@@ -236,7 +237,18 @@ export default function DepartmentsPage() {
     );
 
     if (saved) {
-      setForm(department);
+  if (isEditing) {
+    setForm(department);
+  } else {
+      setShowForm(false);
+      setForm(emptyForm());
+
+      setMessage("Добавлено");
+
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+    }
     }
   }
 
@@ -310,6 +322,11 @@ export default function DepartmentsPage() {
         Деморежим: изменения сохраняются только в этом браузере.
         Серверная авторизация пока не подключена.
       </div>
+      {!showForm && message && (
+  <div className="entity-added-message" role="status">
+    {message}
+  </div>
+      )}
 
       <div className="org-layout">
         <section className="card org-tree-panel">
@@ -465,6 +482,217 @@ export default function DepartmentsPage() {
             </motion.section>
           )}
         </AnimatePresence>
+        {showForm &&
+  createPortal(
+    <div
+      className="entity-modal-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          cancelForm();
+        }
+      }}
+    >
+      <section
+        className="entity-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="department-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="entity-modal-close"
+          onClick={cancelForm}
+          aria-label="Закрыть"
+          title="Закрыть"
+        >
+          ×
+        </button>
+
+        <div className="entity-modal-header">
+          <h2 id="department-modal-title">
+            {isEditing
+              ? "Редактирование подразделения"
+              : "Новое подразделение"}
+          </h2>
+
+          <p className="entity-modal-subtitle">
+            {isEditing
+              ? "Измените параметры подразделения и сохраните изменения."
+              : "Добавьте новый узел в структуру компании."}
+          </p>
+        </div>
+
+        <form
+          className="org-form"
+          onSubmit={handleSubmit}
+        >
+          <div className="field">
+            <label htmlFor="department-name">
+              Название
+            </label>
+
+            <input
+              id="department-name"
+              name="name"
+              value={form.name}
+              onChange={updateField}
+              placeholder="Например, Backend · Team B"
+              maxLength={120}
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="field">
+            <label htmlFor="department-parent">
+              Родительское подразделение
+            </label>
+
+            <select
+              id="department-parent"
+              name="parentId"
+              value={form.parentId ?? ""}
+              onChange={updateField}
+              disabled={isRoot}
+              required={!isRoot}
+            >
+              {isRoot ? (
+                <option value="">
+                  Корень структуры
+                </option>
+              ) : (
+                <>
+                  <option value="">
+                    Выберите подразделение
+                  </option>
+
+                  {parentOptions.map((department) => (
+                    <option
+                      key={department.id}
+                      value={department.id}
+                    >
+                      {department.name}
+                    </option>
+                  ))}
+                </>
+              )}
+            </select>
+
+            <small className="org-help">
+              Смена родителя переносит подразделение
+              вместе со всем его поддеревом.
+            </small>
+          </div>
+
+          <div className="field">
+            <label htmlFor="department-manager">
+              Руководитель
+            </label>
+
+            <select
+              id="department-manager"
+              name="managerId"
+              value={form.managerId}
+              onChange={updateField}
+            >
+              <option value="">
+                Не назначен
+              </option>
+
+              {employees.map((employee) => (
+                <option
+                  key={employee.id}
+                  value={employee.id}
+                >
+                  {employee.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {error && (
+            <div
+              className="org-alert org-alert-error"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
+          {showForm && message && (
+            <div
+              className="org-alert org-alert-success"
+              role="status"
+            >
+              {message}
+            </div>
+          )}
+
+          <div className="org-form-actions">
+            <button
+              type="submit"
+              className="button primary"
+            >
+              {isEditing
+                ? "Сохранить изменения"
+                : "Создать"}
+            </button>
+
+            {isEditing && !isRoot && (
+              <button
+                type="button"
+                className="button org-delete"
+                onClick={handleDelete}
+              >
+                Удалить
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="button"
+              onClick={cancelForm}
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+
+        {isEditing && (
+          <div className="org-members">
+            <h3>
+              Сотрудники подразделения
+            </h3>
+
+            {selectedEmployees.length === 0 ? (
+              <div className="empty">
+                В этом подразделении пока нет сотрудников.
+              </div>
+            ) : (
+              <div className="list">
+                {selectedEmployees.map((employee) => (
+                  <div
+                    className="list-item"
+                    key={employee.id}
+                  >
+                    <span>
+                      {employee.fullName}
+                    </span>
+
+                    <span className="badge info">
+                      {employee.direction}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+    </div>,
+    document.body
+  )}
       </div>
     </motion.section>
   );

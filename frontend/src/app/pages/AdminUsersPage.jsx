@@ -47,14 +47,13 @@ export default function AdminUsersPage() {
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  // Настройки плавного появления страницы
+  // Анимации для страницы и формы
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  // Настройки плавного выезда формы справа
   const formAnimation = {
     initial: { opacity: 0, x: 20 },
     animate: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
@@ -65,7 +64,6 @@ export default function AdminUsersPage() {
     return (
       <motion.section className="page" {...pageAnimation}>
         <h1 className="page-title">Пользователи</h1>
-
         <div className="org-alert org-alert-error" role="alert">
           {initial.error}
         </div>
@@ -122,9 +120,7 @@ export default function AdminUsersPage() {
   }
 
   function startCreating() {
-    setForm(
-      emptyForm(departmentFilter || departments[0]?.id || "")
-    );
+    setForm(emptyForm(departmentFilter || departments[0]?.id || ""));
     setError("");
     setMessage("");
     setShowForm(true);
@@ -199,9 +195,7 @@ export default function AdminUsersPage() {
       ...existingEmployee,
       id:
         form.id ||
-        `employee-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 10)}`,
+        `employee-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       fullName,
       direction: form.direction,
       departmentId: form.departmentId,
@@ -209,16 +203,12 @@ export default function AdminUsersPage() {
     };
 
     const nextEmployees = isEditing
-      ? employees.map((item) =>
-          item.id === employee.id ? employee : item
-        )
+      ? employees.map((item) => (item.id === employee.id ? employee : item))
       : [...employees, employee];
 
     const saved = commit(
       { ...data, employees: nextEmployees },
-      isEditing
-        ? "Данные пользователя сохранены."
-        : "Пользователь добавлен."
+      isEditing ? "Данные пользователя сохранены." : "Пользователь добавлен."
     );
 
     if (saved) {
@@ -256,17 +246,13 @@ export default function AdminUsersPage() {
     const saved = commit(
       {
         ...data,
-        employees: employees.filter(
-          (employee) => employee.id !== form.id
-        ),
+        employees: employees.filter((employee) => employee.id !== form.id),
       },
       "Пользователь удалён."
     );
 
     if (saved) {
-      setForm(
-        emptyForm(departmentFilter || departments[0]?.id || "")
-      );
+      setForm(emptyForm(departmentFilter || departments[0]?.id || ""));
       setShowForm(false);
     }
   }
@@ -287,11 +273,7 @@ export default function AdminUsersPage() {
           </p>
         </div>
 
-        <button
-          className="button primary"
-          type="button"
-          onClick={startCreating}
-        >
+        <button className="button primary" type="button" onClick={startCreating}>
           + Пользователь
         </button>
       </div>
@@ -303,6 +285,7 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="users-layout">
+        {/* ЛЕВАЯ КОЛОНКА: Список и фильтры */}
         <section className="card">
           <div className="card-header">
             <h2>Список пользователей</h2>
@@ -328,12 +311,9 @@ export default function AdminUsersPage() {
               <select
                 id="users-direction"
                 value={directionFilter}
-                onChange={(event) =>
-                  setDirectionFilter(event.target.value)
-                }
+                onChange={(event) => setDirectionFilter(event.target.value)}
               >
                 <option value="">Все направления</option>
-
                 {DIRECTIONS.map((direction) => (
                   <option key={direction} value={direction}>
                     {direction}
@@ -347,12 +327,9 @@ export default function AdminUsersPage() {
               <select
                 id="users-department"
                 value={departmentFilter}
-                onChange={(event) =>
-                  setDepartmentFilter(event.target.value)
-                }
+                onChange={(event) => setDepartmentFilter(event.target.value)}
               >
                 <option value="">Все подразделения</option>
-
                 {departments.map((department) => (
                   <option key={department.id} value={department.id}>
                     {department.name}
@@ -368,8 +345,7 @@ export default function AdminUsersPage() {
 
           {filteredEmployees.length === 0 ? (
             <div className="empty">
-              Пользователи не найдены. Измените фильтры или добавьте
-              пользователя.
+              Пользователи не найдены. Измените фильтры или добавьте пользователя.
             </div>
           ) : (
             <div
@@ -395,43 +371,26 @@ export default function AdminUsersPage() {
                     return (
                       <tr
                         key={employee.id}
-                        className={
-                          form.id === employee.id ? "is-selected" : ""
-                        }
+                        className={form.id === employee.id ? "is-selected" : ""}
                       >
                         <td>
-                          <div className="item-title">
-                            {employee.fullName}
-                          </div>
-                          <div className="item-meta">
-                            {employee.direction}
-                          </div>
+                          <div className="item-title">{employee.fullName}</div>
+                          <div className="item-meta">{employee.direction}</div>
                         </td>
 
-                        <td>
-                          {departmentName(employee.departmentId)}
-                        </td>
+                        <td>{departmentName(employee.departmentId)}</td>
 
                         <td>
                           <div className="users-statuses">
                             {employee.isAdmin && (
-                              <span className="badge info">
-                                Администратор
-                              </span>
+                              <span className="badge info">Администратор</span>
                             )}
-
                             {managed.length > 0 && (
-                              <span className="badge success">
-                                Руководитель
-                              </span>
+                              <span className="badge success">Руководитель</span>
                             )}
-
-                            {!employee.isAdmin &&
-                              managed.length === 0 && (
-                                <span className="badge neutral">
-                                  Сотрудник
-                                </span>
-                              )}
+                            {!employee.isAdmin && managed.length === 0 && (
+                              <span className="badge neutral">Сотрудник</span>
+                            )}
                           </div>
                         </td>
 
@@ -454,7 +413,7 @@ export default function AdminUsersPage() {
           )}
         </section>
 
-        {/* AnimatePresence гарантирует плавное исчезновение формы при отмене */}
+        {/* ПРАВАЯ КОЛОНКА: Форма (с анимацией появления/исчезновения) */}
         <AnimatePresence>
           {showForm && (
             <motion.section className="card" {...formAnimation} key="user-form">
@@ -505,7 +464,6 @@ export default function AdminUsersPage() {
                     required
                   >
                     <option value="">Выберите подразделение</option>
-
                     {departments.map((department) => (
                       <option key={department.id} value={department.id}>
                         {department.name}
@@ -514,8 +472,8 @@ export default function AdminUsersPage() {
                   </select>
 
                   <small className="org-help">
-                    Чтобы перенести сотрудника, выберите другое
-                    подразделение и сохраните изменения.
+                    Чтобы перенести сотрудника, выберите другое подразделение и
+                    сохраните изменения.
                   </small>
                 </div>
 
@@ -530,17 +488,14 @@ export default function AdminUsersPage() {
                 </label>
 
                 <div className="users-access-note">
-                  Руководитель назначается на странице «Подразделения».
-                  Перенос сотрудника сам по себе не снимает с него
-                  руководство другими подразделениями.
+                  Руководитель назначается на странице «Подразделения». Перенос
+                  сотрудника сам по себе не снимает с него руководство другими
+                  подразделениями.
                 </div>
 
                 {selectedManagedDepartments.length > 0 && (
                   <div>
-                    <div className="item-title">
-                      Руководит подразделениями
-                    </div>
-
+                    <div className="item-title">Руководит подразделениями</div>
                     <ul className="users-managed-list">
                       {selectedManagedDepartments.map((department) => (
                         <li key={department.id}>{department.name}</li>
@@ -576,11 +531,7 @@ export default function AdminUsersPage() {
                     </button>
                   )}
 
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={cancelForm}
-                  >
+                  <button className="button" type="button" onClick={cancelForm}>
                     Отмена
                   </button>
                 </div>
