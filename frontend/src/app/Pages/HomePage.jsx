@@ -1,106 +1,248 @@
-const kpis = [
-  {
-    id: "plan",
-    label: "Выполнение годового плана",
-    value: "68%",
-    note: "+12% за месяц",
-  },
-  {
-    id: "skills",
-    label: "Подтверждено скиллов",
-    value: "14 / 22",
-    note: "3 ожидают встречи",
-  },
-  {
-    id: "meetings",
-    label: "Встречи за месяц",
-    value: "6",
-    note: "2 запланированы",
-  },
-  {
-    id: "problems",
-    label: "Открытые проблемы",
-    value: "2",
-    note: "1 требует внимания",
-  },
-];
+import { useApi } from "./shared/hooks/useApi";
+import { getDashboard } from "./shared/api/dashboard.api";
 
-const skills = [
-  {
-    id: 1,
-    name: "REST API",
-    status: "Почти подтверждён",
-    statusTone: "success",
-    progress: 85,
-  },
-  {
-    id: 2,
-    name: "Docker",
-    status: "В работе",
-    statusTone: "info",
-    progress: 58,
-  },
-  {
-    id: 3,
-    name: "PostgreSQL",
-    status: "Есть отставание",
-    statusTone: "warning",
-    progress: 34,
-  },
-];
+function getGreeting() {
+  const hour = new Date().getHours();
 
-const meetings = [
-  {
-    id: 1,
-    title: "1:1 с Марией Соколовой",
-    date: "12 сентября",
-    type: "PR",
-    status: "Запланирована",
-    statusTone: "info",
-  },
-  {
-    id: 2,
-    title: "Подтверждение Docker",
-    date: "15 сентября",
-    type: "Skill Review",
-    status: "Черновик",
-    statusTone: "warning",
-  },
-  {
-    id: 3,
-    title: "Итоги квартала",
-    date: "28 сентября",
-    type: "Team Review",
-    status: "Запланирована",
-    statusTone: "info",
-  },
-];
+  if (hour >= 5 && hour < 12) {
+    return "Доброе утро";
+  }
 
-const problems = [
-  {
-    id: 1,
-    title: "Отставание по PostgreSQL",
-    owner: "Иван Петров",
-    due: "до 24 сентября",
-    level: "Средний",
-  },
-  {
-    id: 2,
-    title: "Не подтверждён CI/CD",
-    owner: "Мария Соколова",
-    due: "до 30 сентября",
-    level: "Высокий",
-  },
-];
+  if (hour >= 12 && hour < 18) {
+    return "Добрый день";
+  }
+
+  if (hour >= 18 && hour < 23) {
+    return "Добрый вечер";
+  }
+
+  return "Доброй ночи";
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+  }).format(date);
+}
+
+function getSkillTone(skill) {
+  if (skill.statusTone) {
+    return skill.statusTone;
+  }
+
+  switch (skill.status) {
+    case "confirmed":
+    case "almost_confirmed":
+    case "on_track":
+      return "success";
+
+    case "in_progress":
+    case "planned":
+      return "info";
+
+    case "at_risk":
+    case "overdue":
+      return "warning";
+
+    default:
+      return "neutral";
+  }
+}
+
+function getSkillLabel(skill) {
+  if (skill.statusLabel) {
+    return skill.statusLabel;
+  }
+
+  switch (skill.status) {
+    case "confirmed":
+      return "Подтверждён";
+    case "almost_confirmed":
+      return "Почти подтверждён";
+    case "on_track":
+      return "По плану";
+    case "in_progress":
+      return "В работе";
+    case "planned":
+      return "Запланирован";
+    case "at_risk":
+      return "Есть отставание";
+    case "overdue":
+      return "Просрочен";
+    default:
+      return skill.status || "Без статуса";
+  }
+}
+
+function getMeetingTone(meeting) {
+  if (meeting.statusTone) {
+    return meeting.statusTone;
+  }
+
+  switch (meeting.status) {
+    case "planned":
+    case "scheduled":
+      return "info";
+
+    case "completed":
+      return "success";
+
+    case "draft":
+    case "postponed":
+      return "warning";
+
+    case "cancelled":
+      return "danger";
+
+    default:
+      return "neutral";
+  }
+}
+
+function getMeetingLabel(meeting) {
+  if (meeting.statusLabel) {
+    return meeting.statusLabel;
+  }
+
+  switch (meeting.status) {
+    case "planned":
+    case "scheduled":
+      return "Запланирована";
+    case "completed":
+      return "Проведена";
+    case "draft":
+      return "Черновик";
+    case "postponed":
+      return "Перенесена";
+    case "cancelled":
+      return "Отменена";
+    default:
+      return meeting.status || "Без статуса";
+  }
+}
+
+function getProblemTone(problem) {
+  if (problem.severityTone) {
+    return problem.severityTone;
+  }
+
+  switch (problem.severity) {
+    case "high":
+    case "critical":
+      return "danger";
+
+    case "medium":
+      return "warning";
+
+    case "low":
+      return "info";
+
+    default:
+      return "neutral";
+  }
+}
+
+function getProblemLabel(problem) {
+  if (problem.severityLabel) {
+    return problem.severityLabel;
+  }
+
+  switch (problem.severity) {
+    case "critical":
+      return "Критический";
+    case "high":
+      return "Высокий";
+    case "medium":
+      return "Средний";
+    case "low":
+      return "Низкий";
+    default:
+      return problem.severity || "Без уровня";
+  }
+}
+
+function EmptyState({ children }) {
+  return <div className="empty">{children}</div>;
+}
+
+function ErrorState({ message, onRetry }) {
+  return (
+    <div className="card">
+      <div className="empty">{message}</div>
+
+      <div className="stack">
+        <button className="button secondary" type="button" onClick={onRetry}>
+          Повторить
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function HomePage() {
+  const { data, loading, error, reload } = useApi(getDashboard, []);
+
+  if (loading) {
+    return (
+      <section className="page">
+        <div className="card">
+          <div className="empty">Загрузка дашборда...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="page">
+        <ErrorState message={error} onRetry={reload} />
+      </section>
+    );
+  }
+
+  if (!data) {
+    return (
+      <section className="page">
+        <ErrorState message="Данные не получены" onRetry={reload} />
+      </section>
+    );
+  }
+
+  const user = data.viewedUser || data.user || {};
+
+  const kpis = Array.isArray(data.kpis) ? data.kpis : [];
+  const skills = Array.isArray(data.skills) ? data.skills : [];
+  const meetings = Array.isArray(data.meetings) ? data.meetings : [];
+  const problems = Array.isArray(data.problems) ? data.problems : [];
+  const achievements = Array.isArray(data.achievements) ? data.achievements : [];
+
+  const displayName = user.firstName || user.fullName || "пользователь";
+
+  const subtitle = [user.direction, user.department]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <section className="page">
       <header className="page-header">
         <div>
-          <h1 className="page-title">Добрый день, Алексей 👋</h1>
+          <h1 className="page-title">
+            {getGreeting()}, {displayName}
+          </h1>
+
           <p className="page-subtitle">
-            Ваш рабочий центр: обучение, встречи и прогресс команды
+            {subtitle || "Ваш рабочий центр развития"}
           </p>
         </div>
 
@@ -108,6 +250,7 @@ export default function HomePage() {
           <button className="button secondary" type="button">
             Открыть аналитику
           </button>
+
           <button className="button primary" type="button">
             Новая встреча
           </button>
@@ -116,96 +259,126 @@ export default function HomePage() {
 
       <div className="grid">
         <section className="card span-12">
-          <div className="kpi-grid">
-            {kpis.map((kpi) => (
-              <article className="kpi" key={kpi.id}>
-                <span className="kpi-label">{kpi.label}</span>
-                <strong className="kpi-value">{kpi.value}</strong>
-                <span className="kpi-note">{kpi.note}</span>
-              </article>
-            ))}
-          </div>
+          {kpis.length === 0 ? (
+            <EmptyState>Статистика пока не доступна</EmptyState>
+          ) : (
+            <div className="kpi-grid">
+              {kpis.map((kpi, index) => (
+                <article className="kpi" key={kpi.id || index}>
+                  <span className="kpi-label">{kpi.label}</span>
+                  <strong className="kpi-value">{kpi.value}</strong>
+                  <span className="kpi-note">{kpi.note}</span>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="card span-7">
           <div className="card-header">
             <h2>План развития навыков</h2>
-            <span className="badge info">BACK</span>
+
+            {user.direction ? (
+              <span className="badge neutral">{user.direction}</span>
+            ) : null}
           </div>
 
-          <div className="stack">
-            {skills.map((skill) => (
-              <article className="skill-row" key={skill.id}>
-                <div className="skill-top">
-                  <h3>{skill.name}</h3>
-                  <span className={`badge ${skill.statusTone}`}>
-                    {skill.status}
-                  </span>
-                </div>
+          {skills.length === 0 ? (
+            <EmptyState>План навыков пока не назначен</EmptyState>
+          ) : (
+            <div className="stack">
+              {skills.map((skill, index) => (
+                <article className="skill-row" key={skill.id || index}>
+                  <div className="skill-top">
+                    <h3>{skill.name}</h3>
 
-                <div
-                  className="progress"
-                  role="progressbar"
-                  aria-valuenow={skill.progress}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                >
+                    <span className={`badge ${getSkillTone(skill)}`}>
+                      {getSkillLabel(skill)}
+                    </span>
+                  </div>
+
                   <div
-                    className="progress-bar"
-                    style={{ width: `${skill.progress}%` }}
-                  />
-                </div>
-              </article>
-            ))}
-          </div>
+                    className="progress"
+                    role="progressbar"
+                    aria-valuenow={skill.progress || 0}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  >
+                    <div
+                      className="progress-bar"
+                      style={{
+                        width: `${Math.min(Math.max(skill.progress || 0, 0), 100)}%`,
+                      }}
+                    />
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="card span-5">
           <div className="card-header">
             <h2>Ближайшие встречи</h2>
+
             <button className="link-button" type="button">
               Все
             </button>
           </div>
 
-          <div className="list">
-            {meetings.map((meeting) => (
-              <article className="list-item" key={meeting.id}>
-                <div>
-                  <div className="item-title">{meeting.title}</div>
-                  <div className="item-meta">
-                    {meeting.date} · {meeting.type}
-                  </div>
-                </div>
+          {meetings.length === 0 ? (
+            <EmptyState>Встречи пока не запланированы</EmptyState>
+          ) : (
+            <div className="list">
+              {meetings.map((meeting, index) => (
+                <article className="list-item" key={meeting.id || index}>
+                  <div>
+                    <div className="item-title">{meeting.title}</div>
 
-                <span className={`badge ${meeting.statusTone}`}>
-                  {meeting.status}
-                </span>
-              </article>
-            ))}
-          </div>
+                    <div className="item-meta">
+                      {formatDate(meeting.startsAt)} · {meeting.type}
+                    </div>
+                  </div>
+
+                  <span className={`badge ${getMeetingTone(meeting)}`}>
+                    {getMeetingLabel(meeting)}
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="card span-8">
           <div className="card-header">
             <h2>Проблемы и риски</h2>
-            <span className="badge warning">Требуют внимания</span>
+
+            {problems.length > 0 ? (
+              <span className="badge warning">Требуют внимания</span>
+            ) : null}
           </div>
 
-          <div className="list">
-            {problems.map((problem) => (
-              <article className="list-item" key={problem.id}>
-                <div>
-                  <div className="item-title">{problem.title}</div>
-                  <div className="item-meta">
-                    {problem.owner} · {problem.due}
+          {problems.length === 0 ? (
+            <EmptyState>Открытых проблем нет</EmptyState>
+          ) : (
+            <div className="list">
+              {problems.map((problem, index) => (
+                <article className="list-item" key={problem.id || index}>
+                  <div>
+                    <div className="item-title">{problem.title}</div>
+
+                    <div className="item-meta">
+                      {problem.owner} · до {formatDate(problem.dueDate)}
+                    </div>
                   </div>
-                </div>
 
-                <span className="badge danger">{problem.level}</span>
-              </article>
-            ))}
-          </div>
+                  <span className={`badge ${getProblemTone(problem)}`}>
+                    {getProblemLabel(problem)}
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="card span-4">
@@ -217,22 +390,29 @@ export default function HomePage() {
             <button className="button secondary full" type="button">
               Добавить скилл
             </button>
+
             <button className="button secondary full" type="button">
               Провести 1:1
             </button>
+
             <button className="button secondary full" type="button">
               Прикрепить материалы
             </button>
+
             <button className="button secondary full" type="button">
               Посмотреть профиль
             </button>
           </div>
 
-          <div className="chips">
-            <span className="chip">Наставник</span>
-            <span className="chip">3 скилла подряд</span>
-            <span className="chip">Без просрочек</span>
-          </div>
+          {achievements.length > 0 ? (
+            <div className="chips">
+              {achievements.map((achievement) => (
+                <span className="chip" key={achievement}>
+                  {achievement}
+                </span>
+              ))}
+            </div>
+          ) : null}
         </section>
       </div>
     </section>
