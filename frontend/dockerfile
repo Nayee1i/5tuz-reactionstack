@@ -1,14 +1,19 @@
 FROM node:20-bookworm
 
-WORKDIR /app
-
-# 🆕 Устанавливаем OpenSSL 3 (стандарт для Debian Bookworm)
+# Устанавливаем OpenSSL 3 (стандарт для Debian Bookworm)
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /app
+
+# 1. Копируем и устанавливаем зависимости
 COPY package*.json ./
 RUN npm install
 
+# 2. Копируем весь остальной код (включая schema.prisma)
 COPY . .
+
+# 3. 🆕 ПРИНУДИТЕЛЬНО генерируем клиент ВНУТРИ Debian-контейнера
+RUN npx prisma generate
 
 EXPOSE 3001
 
