@@ -24,49 +24,50 @@ export default function LoginPage() {
 
   // frontend/src/app/Pages/LoginPage.jsx
 // ... (код выше без изменений)
-
-const handleSubmit = async (event) => {
-  event.preventDefault();
-  setError("");
-  
-  if (!values.login.trim() || !values.password.trim()) {
-    setError("Введите логин и пароль");
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    // Реальный запрос к бэкенду
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        login: values.login,
-        password: values.password,
-      }),
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.message || "Неверный логин или пароль");
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    console.log("✅ 1. Форма отправлена, preventDefault сработал");
+    setError("");
+    
+    if (!values.login.trim() || !values.password.trim()) {
+      console.log("❌ 2. Ошибка: пустые поля");
+      setError("Введите логин и пароль");
+      return;
     }
 
-    const data = await response.json();
+    console.log("🔄 3. Начинаем запрос к /api/auth/login с данными:", values);
+    setIsLoading(true);
     
-    // Сохраняем токен (client.js сам будет подставлять его в заголовки)
-    localStorage.setItem("token", data.token);
-    // Сохраняем базовую инфо о юзере для UI (например, для аватарки в сайдбаре)
-    localStorage.setItem("user", JSON.stringify(data.user));
-    
-    navigate("/", { replace: true });
-  } catch (err) {
-    setError(err.message || "Ошибка входа. Проверьте логин и пароль.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+
+      console.log("📡 4. Ответ получен. Статус:", response.status);
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        console.error("❌ 5. Ошибка от сервера:", errData);
+        throw new Error(errData.message || "Неверный логин или пароль");
+      }
+
+      const data = await response.json();
+      console.log("🎉 6. Успешный вход! Токен:", data.token);
+      
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      
+      console.log("🚀 7. Делаем navigate('/')");
+      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("💥 8. ПОЙМАНА ОШИБКА В TRY/CATCH:", err);
+      setError(err.message || "Ошибка входа. Проверьте логин и пароль.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 // ... (код ниже без изменений)
 
