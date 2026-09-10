@@ -1,5 +1,5 @@
-import { useApi } from "./shared/hooks/useApi";
-import { getDashboard } from "./shared/api/dashboard.api";
+import { useApi } from "../../shared/hooks/useApi";
+import { getDashboard } from "../../shared/api/dashboard.api";
 
 function getGreeting() {
   const hour = new Date().getHours();
