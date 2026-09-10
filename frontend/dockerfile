@@ -2,14 +2,14 @@ FROM node:20-bookworm
 
 WORKDIR /app
 
-# Копируем только package.json для кэширования установки зависимостей
+# 🆕 Устанавливаем OpenSSL 3 (стандарт для Debian Bookworm)
+RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 RUN npm install
 
-# Копируем весь остальной код (включая prisma/schema.prisma)
 COPY . .
 
 EXPOSE 3001
 
-# Команда запуска переопределяется в docker-compose.yml, но оставим фоллбэк
 CMD ["npm", "start"]
