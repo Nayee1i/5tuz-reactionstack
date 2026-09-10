@@ -1,8 +1,11 @@
+// backend/src/index.js
 import meetingsRouter from './api/routes/meetings.js';
 
 
 const express = require('express');
 const cors = require('cors');
+const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -11,12 +14,13 @@ app.use(express.json());
 app.use('/api/meetings', meetingsRouter);
 
 
-// Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running!' });
 });
 
-// Заглушка для кейса
+// Подключаем авторизацию <-- ДОБАВИТЬ
+app.use('/api/auth', authRoutes);
+
 app.get('/api/users', (req, res) => {
   res.json({ users: [] });
 });

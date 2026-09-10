@@ -1,3 +1,4 @@
+// backend/prisma/schema.prisma
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["multiSchema"]
@@ -10,13 +11,12 @@ datasource db {
 }
 
 model users {
-  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   login          String   @unique
   password_hash  String
-  first_name      String
-  last_name      String
-  direction_id   String @db.Uuid
-  department_id  String @db.Uuid
+  full_name      String   // <-- ИСПРАВЛЕНО: было first_name / last_name
+  direction_id   String   @db.Uuid
+  department_id  String   @db.Uuid
   is_admin       Boolean  @default(false)
   is_active      Boolean  @default(true)
   auth_version   Int      @default(1)
