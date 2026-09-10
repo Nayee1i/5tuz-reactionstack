@@ -5,6 +5,9 @@ import HomePage from "./pages/HomePage.jsx";
 import MeetingsPage from "./pages/MeetingsPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import DepartmentsPage from "./pages/DepartmentsPage.jsx";
+import AdminUsersPage from "./pages/AdminUsersPage.jsx";
+import SkillsDirectoryPage from "./pages/SkillsDirectoryPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 
 export default function App() {

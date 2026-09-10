@@ -22,6 +22,9 @@ export default function LoginPage() {
     }));
   };
 
+  // frontend/src/app/Pages/LoginPage.jsx
+// ... (код выше без изменений)
+
 const handleSubmit = async (event) => {
   event.preventDefault();
   setError("");
@@ -31,41 +34,41 @@ const handleSubmit = async (event) => {
     return;
   }
 
-    setIsLoading(true);
+  setIsLoading(true);
+  try {
+    // Реальный запрос к бэкенду
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        login: values.login,
+        password: values.password,
+      }),
+    });
 
-    try {
-      // TODO: заменить на реальный запрос к бэкенду.
-      //
-      // Пример:
-      //
-      // const response = await fetch("/api/auth/login", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({
-      //     login: values.login,
-      //     password: values.password,
-      //   }),
-      // });
-      //
-      // if (!response.ok) {
-      //   throw new Error("Неверный логин или пароль");
-      // }
-      //
-      // const data = await response.json();
-      // Здесь можно сохранить токен или информацию о пользователе.
-
-      // Пока имитируем успешный вход.
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      navigate("/app", { replace: true });
-
-    } catch {
-      setError("Неверный логин или пароль");
-    } finally {
-      setIsLoading(false);
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "Неверный логин или пароль");
     }
-  };
+
+    const data = await response.json();
+    
+    // Сохраняем токен (client.js сам будет подставлять его в заголовки)
+    localStorage.setItem("token", data.token);
+    // Сохраняем базовую инфо о юзере для UI (например, для аватарки в сайдбаре)
+    localStorage.setItem("user", JSON.stringify(data.user));
+    
+    navigate("/", { replace: true });
+  } catch (err) {
+    setError(err.message || "Ошибка входа. Проверьте логин и пароль.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+// ... (код ниже без изменений)
 
   return (
     <section className="auth-page">
