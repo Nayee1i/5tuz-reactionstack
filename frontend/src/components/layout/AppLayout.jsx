@@ -2,8 +2,11 @@ import { NavLink, Outlet } from "react-router-dom";
 
 const navigation = [
   { to: "/", label: "Главная", end: true },
+  { to: "/departments", label: "Подразделения" },
   { to: "/meetings", label: "Встречи" },
   { to: "/profile", label: "Профиль" },
+  { to: "/admin/users", label: "Администрирование" },
+  {to: "/directories/skills", label: "Справочник скиллов",},
 ];
 
 export default function AppLayout() {
