@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   getSubtreeIds,
   loadOrganization,
@@ -221,7 +222,18 @@ export default function DepartmentsPage() {
     );
 
     if (saved) {
-      setForm(department);
+  if (isEditing) {
+    setForm(department);
+  } else {
+      setShowForm(false);
+      setForm(emptyForm());
+
+      setMessage("Добавлено");
+
+      setTimeout(() => {
+        setMessage("");
+      }, 3000);
+    }
     }
   }
 
@@ -295,6 +307,11 @@ export default function DepartmentsPage() {
         Деморежим: изменения сохраняются только в этом браузере.
         Серверная авторизация пока не подключена.
       </div>
+      {!showForm && message && (
+  <div className="entity-added-message" role="status">
+    {message}
+  </div>
+      )}
 
       <div className="org-layout">
         <section className="card org-tree-panel">
@@ -312,141 +329,217 @@ export default function DepartmentsPage() {
           />
         </section>
 
-        {showForm && ( // <-- Условный рендеринг формы
-          <section className="card">
-            <div className="card-header">
-              <h2>
-                {isEditing ? "Редактирование" : "Новое подразделение"}
-              </h2>
-            </div>
+        {showForm &&
+  createPortal(
+    <div
+      className="entity-modal-overlay"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          cancelForm();
+        }
+      }}
+    >
+      <section
+        className="entity-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="department-modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          className="entity-modal-close"
+          onClick={cancelForm}
+          aria-label="Закрыть"
+          title="Закрыть"
+        >
+          ×
+        </button>
 
-            <form className="org-form" onSubmit={handleSubmit}>
-              <div className="field">
-                <label htmlFor="department-name">Название</label>
-                <input
-                  id="department-name"
-                  name="name"
-                  value={form.name}
-                  onChange={updateField}
-                  placeholder="Например, Backend · Team B"
-                  maxLength={120}
-                  required
-                />
-              </div>
+        <div className="entity-modal-header">
+          <h2 id="department-modal-title">
+            {isEditing
+              ? "Редактирование подразделения"
+              : "Новое подразделение"}
+          </h2>
 
-              <div className="field">
-                <label htmlFor="department-parent">
-                  Родительское подразделение
-                </label>
+          <p className="entity-modal-subtitle">
+            {isEditing
+              ? "Измените параметры подразделения и сохраните изменения."
+              : "Добавьте новый узел в структуру компании."}
+          </p>
+        </div>
 
-                <select
-                  id="department-parent"
-                  name="parentId"
-                  value={form.parentId ?? ""}
-                  onChange={updateField}
-                  disabled={isRoot}
-                  required={!isRoot}
-                >
-                  {isRoot ? (
-                    <option value="">Корень структуры</option>
-                  ) : (
-                    <>
-                      <option value="">Выберите подразделение</option>
-                      {parentOptions.map((department) => (
-                        <option key={department.id} value={department.id}>
-                          {department.name}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
+        <form
+          className="org-form"
+          onSubmit={handleSubmit}
+        >
+          <div className="field">
+            <label htmlFor="department-name">
+              Название
+            </label>
 
-                <small className="org-help">
-                  Смена родителя переносит подразделение вместе со всем
-                  его поддеревом. Корень структуры в этом прототипе фиксирован.
-                </small>
-              </div>
+            <input
+              id="department-name"
+              name="name"
+              value={form.name}
+              onChange={updateField}
+              placeholder="Например, Backend · Team B"
+              maxLength={120}
+              required
+              autoFocus
+            />
+          </div>
 
-              <div className="field">
-                <label htmlFor="department-manager">Руководитель</label>
+          <div className="field">
+            <label htmlFor="department-parent">
+              Родительское подразделение
+            </label>
 
-                <select
-                  id="department-manager"
-                  name="managerId"
-                  value={form.managerId}
-                  onChange={updateField}
-                >
-                  <option value="">Не назначен</option>
+            <select
+              id="department-parent"
+              name="parentId"
+              value={form.parentId ?? ""}
+              onChange={updateField}
+              disabled={isRoot}
+              required={!isRoot}
+            >
+              {isRoot ? (
+                <option value="">
+                  Корень структуры
+                </option>
+              ) : (
+                <>
+                  <option value="">
+                    Выберите подразделение
+                  </option>
 
-                  {employees.map((employee) => (
-                    <option key={employee.id} value={employee.id}>
-                      {employee.fullName}
+                  {parentOptions.map((department) => (
+                    <option
+                      key={department.id}
+                      value={department.id}
+                    >
+                      {department.name}
                     </option>
                   ))}
-                </select>
-              </div>
-
-              {error && (
-                <div className="org-alert org-alert-error" role="alert">
-                  {error}
-                </div>
+                </>
               )}
+            </select>
 
-              {message && (
-                <div className="org-alert org-alert-success" role="status">
-                  {message}
-                </div>
-              )}
+            <small className="org-help">
+              Смена родителя переносит подразделение
+              вместе со всем его поддеревом.
+            </small>
+          </div>
 
-              <div className="org-form-actions">
-                <button type="submit" className="button primary">
-                  {isEditing ? "Сохранить изменения" : "Создать"}
-                </button>
+          <div className="field">
+            <label htmlFor="department-manager">
+              Руководитель
+            </label>
 
-                {isEditing && !isRoot && (
-                  <button
-                    type="button"
-                    className="button org-delete"
-                    onClick={handleDelete}
-                  >
-                    Удалить
-                  </button>
-                )}
+            <select
+              id="department-manager"
+              name="managerId"
+              value={form.managerId}
+              onChange={updateField}
+            >
+              <option value="">
+                Не назначен
+              </option>
 
-                <button
-                  type="button"
-                  className="button"
-                  onClick={cancelForm}
+              {employees.map((employee) => (
+                <option
+                  key={employee.id}
+                  value={employee.id}
                 >
-                  Отмена
-                </button>
+                  {employee.fullName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {error && (
+            <div
+              className="org-alert org-alert-error"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
+          {showForm && message && (
+            <div
+              className="org-alert org-alert-success"
+              role="status"
+            >
+              {message}
+            </div>
+          )}
+
+          <div className="org-form-actions">
+            <button
+              type="submit"
+              className="button primary"
+            >
+              {isEditing
+                ? "Сохранить изменения"
+                : "Создать"}
+            </button>
+
+            {isEditing && !isRoot && (
+              <button
+                type="button"
+                className="button org-delete"
+                onClick={handleDelete}
+              >
+                Удалить
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="button"
+              onClick={cancelForm}
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+
+        {isEditing && (
+          <div className="org-members">
+            <h3>
+              Сотрудники подразделения
+            </h3>
+
+            {selectedEmployees.length === 0 ? (
+              <div className="empty">
+                В этом подразделении пока нет сотрудников.
               </div>
-            </form>
+            ) : (
+              <div className="list">
+                {selectedEmployees.map((employee) => (
+                  <div
+                    className="list-item"
+                    key={employee.id}
+                  >
+                    <span>
+                      {employee.fullName}
+                    </span>
 
-            {isEditing && (
-              <div className="org-members">
-                <h3>Сотрудники подразделения</h3>
-
-                {selectedEmployees.length === 0 ? (
-                  <div className="empty">
-                    В этом подразделении пока нет сотрудников.
+                    <span className="badge info">
+                      {employee.direction}
+                    </span>
                   </div>
-                ) : (
-                  <div className="list">
-                    {selectedEmployees.map((employee) => (
-                      <div className="list-item" key={employee.id}>
-                        <span>{employee.fullName}</span>
-                        <span className="badge info">
-                          {employee.direction}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                ))}
               </div>
             )}
-          </section>
+          </div>
         )}
+      </section>
+    </div>,
+    document.body
+  )}
       </div>
     </section>
   );
