@@ -79,12 +79,13 @@ model User {
   login          String    @unique
   passwordHash   String    @map("password_hash")
   fullName       String    @map("full_name")
+  sessionToken   String?   @unique @map("session_token")
   
   // 🆕 Новые поля пользователя
   birthDate      DateTime? @map("birth_date")  // Дата рождения
 
   directionId    String    @map("direction_id") @db.Uuid
-  departmentId   String    @map("department_id") @db.Uuid
+  departmentId   String?    @map("department_id") @db.Uuid
   isAdmin        Boolean   @default(false) @map("is_admin")
   isActive       Boolean   @default(true) @map("is_active")
   authVersion    Int       @default(1) @map("auth_version")
@@ -92,7 +93,7 @@ model User {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   direction      Direction @relation(fields: [directionId], references: [id])
-  department     Department @relation(fields: [departmentId], references: [id])
+  department     Department? @relation(fields: [departmentId], references: [id])
   managedDepartments Department[] @relation("DepartmentHead")
   learningPlans  LearningPlan[] @relation("EmployeePlans")
   createdPlans   LearningPlan[] @relation("CreatorPlans")
