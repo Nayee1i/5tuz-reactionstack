@@ -58,7 +58,7 @@ export default function LoginPage() {
 
       // Пока имитируем успешный вход.
       await new Promise((resolve) => setTimeout(resolve, 800));
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
 
     } catch {
       setError("Неверный логин или пароль");
