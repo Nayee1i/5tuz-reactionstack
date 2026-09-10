@@ -8,13 +8,13 @@
 
 ## Локальная разработка (без Docker)
 ### Backend
-cd backend (либо полный путь)
-npm install
-npm start или npm run dev
-если не работает - npm install react-router-dom и заново пред. шаг
+1. cd backend (либо полный путь)
+2. npm install
+3. npm start или npm run dev
+4. если не работает - npm install react-router-dom и заново пред. шаг
 
 ### Frontend  
-cd frontend (либо полный путь)
-npm install
-npm start или npm run dev
-если не работает - npm install react-router-dom и заново пред. шаг
+1. cd frontend (либо полный путь)
+2. npm install
+3. npm start или npm run dev
+4. если не работает - npm install react-router-dom и заново пред. шаг
