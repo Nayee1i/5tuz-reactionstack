@@ -9,7 +9,7 @@ function App() {
       <p>Система мониторинга развития технических навыков</p>
       <div style={{ marginTop: '30px', padding: '20px', background: '#f0f0f0', borderRadius: '8px' }}>
         <h3>✅ Система работает!</h3>
-        <p>Backend: <a href="http://localhost:3001/api/health">http://localhost:3001/api/health</a></p>
+        <p>Backend: <a href="http://159.194.230.135:3001/api/health">http://159.194.230.135:3001/api/health</a></p>
       </div>
     </div>
   );
