@@ -1,17 +1,15 @@
-# 🆕 МЕНЯЕМ alpine на bookworm (Debian). Это гарантированно решит проблему с Prisma
 FROM node:20-bookworm
 
 WORKDIR /app
 
-# Копируем package.json и устанавливаем зависимости
+# Копируем только package.json для кэширования установки зависимостей
 COPY package*.json ./
 RUN npm install
 
-# Копируем весь остальной код
+# Копируем весь остальной код (включая prisma/schema.prisma)
 COPY . .
 
-# Открываем порт (убедись, что он совпадает с docker-compose.yml, у тебя там 3001)
 EXPOSE 3001
 
-# Запускаем приложение
+# Команда запуска переопределяется в docker-compose.yml, но оставим фоллбэк
 CMD ["npm", "start"]

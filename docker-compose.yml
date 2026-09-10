@@ -45,7 +45,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./backend:/app
-      - /app/node_modules
+    command: sh -c "npx prisma generate && npm start"
 
 
   frontend:
