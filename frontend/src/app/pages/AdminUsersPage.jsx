@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL = "http://localhost:3001/api"; // Укажите ваш порт
+const API_URL = "http://159.194.230.135:3001/api";
 
 function emptyForm(departmentId = "") {
   return {
@@ -28,7 +28,6 @@ export default function AdminUsersPage() {
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Анимации (оставлены без изменений)
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
@@ -45,12 +44,10 @@ export default function AdminUsersPage() {
     exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  // Загрузка данных при монтировании
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Перезагрузка при изменении фильтров
   useEffect(() => {
     fetchUsers();
   }, [search, directionFilter, departmentFilter]);
@@ -64,22 +61,30 @@ export default function AdminUsersPage() {
         fetch(`${API_URL}/directions`),
       ]);
 
-      if (!usersRes.ok || !deptsRes.ok || !dirsRes.ok) throw new Error("Ошибка сети");
+      if (!usersRes.ok || !deptsRes.ok || !dirsRes.ok) {
+        throw new Error("Ошибка сети при загрузке данных");
+      }
 
       const usersData = await usersRes.json();
-      setUsers(usersData);
-      setDepartments(await deptsRes.json());
-      setDirections(await dirsRes.json());
+      const deptsData = await deptsRes.json();
+      const dirsData = await dirsRes.json();
+
+      // 🛡️ ЗАЩИТА: Проверяем, что пришли именно массивы
+      if (Array.isArray(usersData)) setUsers(usersData);
+      else {
+        console.error("Бэкенд вернул не массив users:", usersData);
+        setError("Ошибка формата данных пользователей");
+      }
+
+      if (Array.isArray(deptsData)) setDepartments(deptsData);
+      if (Array.isArray(dirsData)) setDirections(dirsData);
       
-      // Устанавливаем первый отдел в форму по умолчанию
-      if (deptsRes.ok) {
-        const depts = await deptsRes.json();
-        if (depts.length > 0) {
-          setForm(prev => ({ ...prev, departmentId: depts[0].id }));
-        }
+      if (Array.isArray(deptsData) && deptsData.length > 0) {
+        setForm(prev => ({ ...prev, departmentId: deptsData[0].id }));
       }
     } catch (err) {
-      setError("Не удалось загрузить данные. Убедитесь, что сервер запущен.");
+      console.error(err);
+      setError("Не удалось загрузить данные. Проверьте, запущен ли бэкенд на порту 3001.");
     } finally {
       setIsLoading(false);
     }
@@ -94,10 +99,21 @@ export default function AdminUsersPage() {
 
       const res = await fetch(`${API_URL}/users?${params.toString()}`);
       if (res.ok) {
-        setUsers(await res.json());
+        const data = await res.json();
+        // 🛡️ ЗАЩИТА: Обновляем стейт только если это массив
+        if (Array.isArray(data)) {
+          setUsers(data);
+        } else {
+          console.error("Бэкенд вернул не массив при фильтрации:", data);
+          setError("Ошибка при фильтрации: неверный формат данных");
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.error || "Ошибка при фильтрации");
       }
     } catch (err) {
       console.error("Ошибка фильтрации:", err);
+      setError("Ошибка сети при фильтрации");
     }
   };
 
@@ -130,6 +146,7 @@ export default function AdminUsersPage() {
     setError("");
     setMessage("");
   }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -149,7 +166,6 @@ export default function AdminUsersPage() {
     const url = isEditing ? `${API_URL}/users/${form.id}` : `${API_URL}/users`;
     const method = isEditing ? "PUT" : "POST";
 
-    // Генерируем временный логин и пароль для новых пользователей, чтобы не усложнять форму
     const defaultLogin = isEditing ? undefined : `${fullName.toLowerCase().replace(/\s+/g, '.')}@company.test`;
     const defaultPassword = isEditing ? undefined : "123456";
 
@@ -173,7 +189,7 @@ export default function AdminUsersPage() {
 
       setMessage(isEditing ? "Данные пользователя сохранены." : `Пользователь добавлен. Логин: ${defaultLogin}, Пароль: ${defaultPassword}`);
       setShowForm(false);
-      fetchData(); // Перезагружаем список
+      fetchData();
     } catch (err) {
       setError(err.message);
     }
@@ -213,7 +229,8 @@ export default function AdminUsersPage() {
     );
   }
 
-  const filteredUsers = users; // Фильтрация теперь делается на бэкенде
+  // 🛡️ ГЛАВНОЕ ИСПРАВЛЕНИЕ: Гарантируем, что filteredUsers ВСЕГДА массив
+  const filteredUsers = Array.isArray(users) ? users : [];
 
   return (
     <motion.section className="page" {...pageAnimation}>
@@ -228,6 +245,8 @@ export default function AdminUsersPage() {
           + Пользователь
         </button>
       </div>
+
+      {error && <div className="org-alert org-alert-error" style={{marginBottom: '16px'}} role="alert">{error}</div>}
 
       <div className="grid">
         <section className="card span-12">
@@ -255,7 +274,7 @@ export default function AdminUsersPage() {
                 onChange={(e) => setDirectionFilter(e.target.value)}
               >
                 <option value="">Все направления</option>
-                {directions.map((dir) => (
+                {Array.isArray(directions) && directions.map((dir) => (
                   <option key={dir.id} value={dir.id}>{dir.name}</option>
                 ))}
               </select>
@@ -268,7 +287,7 @@ export default function AdminUsersPage() {
                 onChange={(e) => setDepartmentFilter(e.target.value)}
               >
                 <option value="">Все подразделения</option>
-                {departments.map((dept) => (
+                {Array.isArray(departments) && departments.map((dept) => (
                   <option key={dept.id} value={dept.id}>{dept.name}</option>
                 ))}
               </select>
@@ -358,7 +377,7 @@ export default function AdminUsersPage() {
                     required
                   >
                     <option value="">Выберите направление</option>
-                    {directions.map((dir) => (
+                    {Array.isArray(directions) && directions.map((dir) => (
                       <option key={dir.id} value={dir.id}>{dir.name}</option>
                     ))}
                   </select>
@@ -374,7 +393,7 @@ export default function AdminUsersPage() {
                     required
                   >
                     <option value="">Выберите подразделение</option>
-                    {departments.map((dept) => (
+                    {Array.isArray(departments) && departments.map((dept) => (
                       <option key={dept.id} value={dept.id}>{dept.name}</option>
                     ))}
                   </select>

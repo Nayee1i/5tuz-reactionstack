@@ -1,9 +1,9 @@
-import { useState } from "react"; 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../shared/hooks/useApi.js";
 import { getDashboard } from "../../shared/api/dashboard.api.js";
 import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -240,8 +240,326 @@ function DashboardSkeleton() {
   );
 }
 
+// Компонент модального окна для добавления проблемы
+function AddProblemModal({ isOpen, onClose, onSubmit }) {
+  const [formData, setFormData] = useState({
+    title: "",
+    comment: "",
+    owner: "",
+    dueDate: "",
+    severity: "medium",
+  });
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit(formData);
+    setFormData({
+      title: "",
+      comment: "",
+      owner: "",
+      dueDate: "",
+      severity: "medium",
+    });
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Затемнение фона */}
+          <motion.div
+            className="modal-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: "rgba(0, 0, 0, 0.7)",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {/* Модальное окно */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "#1f2937",
+                borderRadius: "12px",
+                padding: "24px",
+                width: "100%",
+                maxWidth: "500px",
+                maxHeight: "90vh",
+                overflowY: "auto",
+                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "24px",
+                }}
+              >
+                <h2 style={{ margin: 0, fontSize: "20px", color: "white" }}>
+                  Добавить проблему
+                </h2>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#9ca3af",
+                    fontSize: "24px",
+                    cursor: "pointer",
+                    padding: "0",
+                    lineHeight: 1,
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: "16px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      color: "#d1d5db",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Название *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      background: "#374151",
+                      border: "1px solid #4b5563",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                    placeholder="Например: Отставание по React"
+                  />
+                </div>
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      color: "#d1d5db",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Описание
+                  </label>
+                  <textarea
+                    value={formData.comment}
+                    onChange={(e) =>
+                      setFormData({ ...formData, comment: e.target.value })
+                    }
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      background: "#374151",
+                      border: "1px solid #4b5563",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontSize: "14px",
+                      resize: "vertical",
+                      boxSizing: "border-box",
+                      fontFamily: "inherit",
+                    }}
+                    placeholder="Опишите проблему..."
+                  />
+                </div>
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      color: "#d1d5db",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Владелец *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.owner}
+                    onChange={(e) =>
+                      setFormData({ ...formData, owner: e.target.value })
+                    }
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      background: "#374151",
+                      border: "1px solid #4b5563",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                    placeholder="Например: Иван Петров"
+                  />
+                </div>
+
+                <div style={{ marginBottom: "16px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      color: "#d1d5db",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Срок решения *
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dueDate: e.target.value })
+                    }
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "10px 12px",
+                      background: "#374151",
+                      border: "1px solid #4b5563",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: "24px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      color: "#d1d5db",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Уровень важности *
+                  </label>
+                  <div style={{ display: "flex", gap: "12px" }}>
+                    {[
+                      { value: "low", label: "Низкий", color: "#3b82f6" },
+                      { value: "medium", label: "Средний", color: "#f59e0b" },
+                      { value: "high", label: "Высокий", color: "#ef4444" },
+                    ].map((item) => (
+                      <button
+                        key={item.value}
+                        type="button"
+                        onClick={() =>
+                          setFormData({ ...formData, severity: item.value })
+                        }
+                        style={{
+                          flex: 1,
+                          padding: "10px 16px",
+                          background:
+                            formData.severity === item.value
+                              ? item.color
+                              : "#374151",
+                          border: "1px solid #4b5563",
+                          borderRadius: "6px",
+                          color: "white",
+                          fontSize: "14px",
+                          fontWeight: formData.severity === item.value ? "600" : "400",
+                          cursor: "pointer",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    style={{
+                      flex: 1,
+                      padding: "10px 16px",
+                      background: "#374151",
+                      border: "1px solid #4b5563",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      flex: 1,
+                      padding: "10px 16px",
+                      background: "#3b82f6",
+                      border: "none",
+                      borderRadius: "6px",
+                      color: "white",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Добавить
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export default function HomePage() {
   const [isStatsOpen, setIsStatsOpen] = useState(true);
+  const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
@@ -270,11 +588,28 @@ export default function HomePage() {
   const kpis = Array.isArray(data.kpis) ? data.kpis : [];
   const skills = Array.isArray(data.skills) ? data.skills : [];
   const meetings = Array.isArray(data.meetings) ? data.meetings : [];
-  const problems = Array.isArray(data.problems) ? data.problems : [];
+  const [problems, setProblems] = useState(
+  Array.isArray(data?.problems) ? data.problems : []
+);
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
 
   const displayName = user.firstName || user.fullName || "пользователь";
   const subtitle = [user.direction, user.department].filter(Boolean).join(" · ");
+
+  // Обработчик добавления проблемы (пока просто лог, потом будет API)
+  const handleAddProblem = (problemData) => {
+  const newProblem = {
+    id: Date.now().toString(), // временный ID
+    title: problemData.title,
+    comment: problemData.comment,
+    owner: problemData.owner,
+    dueDate: problemData.dueDate,
+    severity: problemData.severity,
+    status: "OPEN",
+  };
+  
+  setProblems((prev) => [...prev, newProblem]);
+};
 
   return (
     <motion.section className="page" {...pageAnimation}>
@@ -387,7 +722,6 @@ export default function HomePage() {
           <div className="card-header">
             <h2>Ближайшие встречи</h2>
 
-            {/* 👇 ДОБАВЛЕНО: onClick для перехода на страницу встреч */}
             <button 
               className="link-button" 
               type="button"
@@ -424,9 +758,25 @@ export default function HomePage() {
           <div className="card-header">
             <h2>Проблемы и риски</h2>
 
-            {problems.length > 0 ? (
-              <span className="badge warning">Требуют внимания</span>
-            ) : null}
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              {problems.length > 0 ? (
+                <span className="badge warning">Требуют внимания</span>
+              ) : null}
+              
+              {/* Кнопка "Добавить" */}
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setIsProblemModalOpen(true)}
+                style={{
+                  padding: "6px 12px",
+                  fontSize: "13px",
+                  fontWeight: "500",
+                }}
+              >
+                Добавить
+              </button>
+            </div>
           </div>
 
           {problems.length === 0 ? (
@@ -490,6 +840,13 @@ export default function HomePage() {
           ) : null}
         </section>
       </div>
+
+      {/* Модальное окно для добавления проблемы */}
+      <AddProblemModal
+        isOpen={isProblemModalOpen}
+        onClose={() => setIsProblemModalOpen(false)}
+        onSubmit={handleAddProblem}
+      />
     </motion.section>
   );
 }
