@@ -561,10 +561,20 @@ export default function HomePage() {
   const [isStatsOpen, setIsStatsOpen] = useState(true);
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   
+
+  const [problems, setProblems] = useState([]);
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
   const ongoingMeeting = meetingsStatus?.ongoing;
+
+
+  useEffect(() => {
+    if (data && Array.isArray(data.problems)) {
+      setProblems(data.problems);
+    }
+  }, [data]);
+
 
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
@@ -588,9 +598,7 @@ export default function HomePage() {
   const kpis = Array.isArray(data.kpis) ? data.kpis : [];
   const skills = Array.isArray(data.skills) ? data.skills : [];
   const meetings = Array.isArray(data.meetings) ? data.meetings : [];
-  const [problems, setProblems] = useState(
-  Array.isArray(data?.problems) ? data.problems : []
-);
+
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
 
   const displayName = user.firstName || user.fullName || "пользователь";
