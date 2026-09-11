@@ -1,3 +1,4 @@
+import { useState } from "react"; // 1. Добавили импорт useState
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../shared/hooks/useApi.js";
 import { getDashboard } from "../../shared/api/dashboard.api.js";
@@ -240,20 +241,22 @@ function DashboardSkeleton() {
 }
 
 export default function HomePage() {
+  // 2. Добавили состояние для управления видимостью статистики (по умолчанию скрыта)
+  const [isStatsOpen, setIsStatsOpen] = useState(true);
+  
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
   const ongoingMeeting = meetingsStatus?.ongoing;
 
-  // Настройки анимации для этой страницы
   const pageAnimation = {
-    initial: { opacity: 0, y: 12 }, // Начинаем чуть ниже и прозрачные
-    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } }, // Плавно всплываем
-    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } }, // Уходим чуть вверх при смене страницы
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
   if (!data && loading) {
-  return <DashboardSkeleton />;
+    return <DashboardSkeleton />;
   } 
 
   if (error || !data) {
@@ -274,7 +277,7 @@ export default function HomePage() {
   const displayName = user.firstName || user.fullName || "пользователь";
   const subtitle = [user.direction, user.department].filter(Boolean).join(" · ");
 
-    return (
+  return (
     <motion.section className="page" {...pageAnimation}>
       {ongoingMeeting ? (
         <div className="live-banner">
@@ -309,28 +312,36 @@ export default function HomePage() {
           </p>
         </div>
         <div className="page-actions">
-          <button className="button secondary" type="button">
-            Открыть статистику
+          {/* 3. Добавили onClick и динамический текст кнопки */}
+          <button 
+            className="button secondary" 
+            type="button"
+            onClick={() => setIsStatsOpen(!isStatsOpen)}
+          >
+            {isStatsOpen ? "Скрыть статистику" : "Открыть статистику"}
           </button>
         </div>
       </header>
 
       <div className="grid">
-        <section className="card span-12">
-          {kpis.length === 0 ? (
-            <EmptyState>Статистика пока не доступна</EmptyState>
-          ) : (
-            <div className="kpi-grid">
-              {kpis.map((kpi, index) => (
-                <article className="kpi" key={kpi.id || index}>
-                  <span className="kpi-label">{kpi.label}</span>
-                  <strong className="kpi-value">{kpi.value}</strong>
-                  <span className="kpi-note">{kpi.note}</span>
-                </article>
-              ))}
-            </div>
-          )}
-        </section>
+        {/* 4. Обернули блок статистики в условие isStatsOpen */}
+        {isStatsOpen && (
+          <section className="card span-12">
+            {kpis.length === 0 ? (
+              <EmptyState>Статистика пока не доступна</EmptyState>
+            ) : (
+              <div className="kpi-grid">
+                {kpis.map((kpi, index) => (
+                  <article className="kpi" key={kpi.id || index}>
+                    <span className="kpi-label">{kpi.label}</span>
+                    <strong className="kpi-value">{kpi.value}</strong>
+                    <span className="kpi-note">{kpi.note}</span>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <section className="card span-7">
           <div className="card-header">

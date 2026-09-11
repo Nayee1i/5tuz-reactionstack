@@ -4,8 +4,8 @@
 
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('./routes/auth');
 const usersRoutes = require('./routes/users'); // <-- ДОБАВИТЬ
+const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
 
 const app = express();
 const PORT = process.env.PORT || 3001;

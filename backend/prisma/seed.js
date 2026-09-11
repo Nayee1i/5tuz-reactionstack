@@ -7,51 +7,110 @@ const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Начинаем сидирование...');
+  
+  // Очистка БД перед сидированием (в обратном порядке зависимостей)
+  await prisma.problem.deleteMany();
+  await prisma.meetingSkill.deleteMany();
+  await prisma.meeting.deleteMany();
+  await prisma.planItem.deleteMany();
+  await prisma.learningPlan.deleteMany();
+  await prisma.userSkill.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.department.deleteMany();
+  await prisma.direction.deleteMany();
 
   const hashedPassword = await bcrypt.hash('123456', 10);
+  const sessionToken = crypto.randomBytes(32).toString('hex');
 
-  // 1. Создаем направление
-  const direction = await prisma.direction.upsert({
-    where: { name: 'Разработка' },
-    update: {},
-    create: { name: 'Разработка' },
-  });
+  // 1. Создаем направления
+  const directions = await Promise.all([
+    prisma.direction.create({ data: { name: 'BACK' } }),
+    prisma.direction.create({ data: { name: 'FRONT' } }),
+    prisma.direction.create({ data: { name: 'QA' } }),
+  ]);
+  console.log('✅ Направления созданы');
 
-  // 2. Создаем Админа БЕЗ отдела (теперь departmentId может быть null)
+  // 2. Создаем Админа (пока без отдела)
   const adminUser = await prisma.user.create({
     data: {
       login: 'admin',
       passwordHash: hashedPassword,
       fullName: 'Администратор Системы',
-      directionId: direction.id,
-      // departmentId намеренно не указываем, он будет null
+      directionId: directions[0].id, // Временно BACK
       isAdmin: true,
+      sessionToken,
+    },
+  });
+
+  // 3. Создаем корневой отдел и назначаем Админа главой
+  const rootDepartment = await prisma.department.create({
+    data: {
+      name: 'Департамент Разработки',
+      headId: adminUser.id,
+    },
+  });
+
+  // 4. Привязываем Админа к отделу
+  await prisma.user.update({
+    where: { id: adminUser.id },
+    data: { departmentId: rootDepartment.id },
+  });
+
+  // 5. Создаем дочерние отделы
+  const frontDept = await prisma.department.create({
+    data: {
+      name: 'Frontend Команда',
+      parentId: rootDepartment.id,
+      headId: adminUser.id, // Пока админ правит всем
+    },
+  });
+
+  const backDept = await prisma.department.create({
+    data: {
+      name: 'Backend Команда',
+      parentId: rootDepartment.id,
+      headId: adminUser.id,
+    },
+  });
+
+  // 6. Создаем руководителей и сотрудников
+  const frontLead = await prisma.user.create({
+    data: {
+      login: 'front_lead',
+      passwordHash: hashedPassword,
+      fullName: 'Анна Петрова',
+      directionId: directions[1].id, // FRONT
+      departmentId: frontDept.id,
+      isAdmin: false,
       sessionToken: crypto.randomBytes(32).toString('hex'),
     },
   });
 
-  // 3. Создаем отдел и сразу назначаем Админа его главой (headId)
-  const department = await prisma.department.create({
+  // Назначаем Анну главой Frontend отдела
+  await prisma.department.update({
+    where: { id: frontDept.id },
+    data: { headId: frontLead.id },
+  });
+
+  const employee1 = await prisma.user.create({
     data: {
-      name: 'Основной отдел',
-      headId: adminUser.id, 
+      login: 'employee1',
+      passwordHash: hashedPassword,
+      fullName: 'Иван Иванов',
+      directionId: directions[1].id, // FRONT
+      departmentId: frontDept.id,
+      isAdmin: false,
+      sessionToken: crypto.randomBytes(32).toString('hex'),
     },
   });
 
-  // 4. Обновляем Админа, привязывая его к созданному отделу
-  await prisma.user.update({
-    where: { id: adminUser.id },
-    data: { departmentId: department.id },
-  });
-
-  // 5. Создаем обычного сотрудника и сразу привязываем к направлению и отделу
-  await prisma.user.create({
+  const employee2 = await prisma.user.create({
     data: {
-      login: 'employee',
+      login: 'employee2',
       passwordHash: hashedPassword,
-      fullName: 'Иван Иванов',
-      directionId: direction.id,
-      departmentId: department.id,
+      fullName: 'Сергей Сидоров',
+      directionId: directions[0].id, // BACK
+      departmentId: backDept.id,
       isAdmin: false,
       sessionToken: crypto.randomBytes(32).toString('hex'),
     },
@@ -59,7 +118,9 @@ async function main() {
 
   console.log('✅ Сидирование завершено!');
   console.log('👤 Admin: login="admin", password="123456"');
-  console.log('👤 Employee: login="employee", password="123456"');
+  console.log('👤 Front Lead: login="front_lead", password="123456"');
+  console.log('👤 Employee 1: login="employee1", password="123456"');
+  console.log('👤 Employee 2: login="employee2", password="123456"');
 }
 
 main()
