@@ -44,7 +44,7 @@ export default function LoginPage() {
         firstName: values.login,
         lastName: "",
         fullName: values.login,
-        email: `${values.login}@skillflow.local`,
+        email: `${values.login}@skillflow.local`, // Добавлены обратные кавычки ` `
         role: values.login.toLowerCase() === "admin" ? "admin" : "user",
         position: values.login.toLowerCase() === "admin" ? "Team Lead" : "Frontend Developer",
         direction: "BACK",
@@ -94,8 +94,7 @@ export default function LoginPage() {
                 required
               />
             </div>
-
-            <div className="field">
+<div className="field">
               <label htmlFor="password">Пароль</label>
               <div className="password-control">
                 <input
@@ -129,7 +128,6 @@ export default function LoginPage() {
               className="button primary auth-submit"
               type="submit"
               disabled={isLoading}
-              onClick={() => console.log("Login button pressed")}
             >
               {isLoading ? (
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
