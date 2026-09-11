@@ -572,9 +572,14 @@ export default function HomePage() {
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
+  const [problems, setProblems] = useState(
+  Array.isArray(data?.problems) ? data.problems : []
+  );
+  
   if (!data && loading) {
     return <DashboardSkeleton />;
   } 
+
 
   if (error || !data) {
     return (
@@ -588,9 +593,7 @@ export default function HomePage() {
   const kpis = Array.isArray(data.kpis) ? data.kpis : [];
   const skills = Array.isArray(data.skills) ? data.skills : [];
   const meetings = Array.isArray(data.meetings) ? data.meetings : [];
-  const [problems, setProblems] = useState(
-  Array.isArray(data?.problems) ? data.problems : []
-);
+
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
 
   const displayName = user.firstName || user.fullName || "пользователь";
