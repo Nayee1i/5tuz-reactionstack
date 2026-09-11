@@ -4,7 +4,8 @@
 
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
+const authRoutes = require('./routes/auth');
+const usersRoutes = require('./routes/users'); // <-- ДОБАВИТЬ
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -12,7 +13,7 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 // app.use('/api/meetings', meetingsRouter);
-
+app.use('/avatars', express.static(path.join(__dirname, '..', 'uploads', 'avatars')))
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running!' });
@@ -20,6 +21,7 @@ app.get('/api/health', (req, res) => {
 
 // Подключаем авторизацию <-- ДОБАВИТЬ
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 
 app.get('/api/users', (req, res) => {
   res.json({ users: [] });
