@@ -2529,7 +2529,3 @@ h3 {
   border-color: rgba(235, 87, 87, 0.4);
   color: var(--danger);
 }
-
-.workspace.has-live-banner .content {
-  padding-top: 100px;
-}
