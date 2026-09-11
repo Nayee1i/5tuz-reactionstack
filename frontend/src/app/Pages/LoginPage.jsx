@@ -16,11 +16,17 @@ export default function LoginPage() {
     if (error) setError(""); // Убираем ошибку, как только пользователь начал печатать
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+    const handleSubmit = async (event) => {
+    console.log("1. Функция handleSubmit вызвана");
+    
+    // Если этой строки нет в консоли, значит событие не перехватывается!
+    event.preventDefault(); 
+    console.log("2. event.preventDefault() отработал");
+    
     setError("");
 
     if (!values.login.trim() || !values.password.trim()) {
+      console.log("3. Ошибка валидации: пустые поля");
       setError("Введите логин и пароль");
       cardRef.current?.classList.add("shake");
       setTimeout(() => cardRef.current?.classList.remove("shake"), 400);
@@ -28,6 +34,7 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
+    console.log("4. Началась имитация запроса");
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 700));
@@ -46,9 +53,13 @@ export default function LoginPage() {
 
       localStorage.setItem("token", "fake-demo-token");
       localStorage.setItem("user", JSON.stringify(fakeUser));
+      console.log("5. Данные сохранены в localStorage, выполняем navigate...");
 
       navigate("/app", { replace: true });
+      console.log("6. navigate вызван");
+      
     } catch (err) {
+      console.error("Ошибка в try/catch:", err);
       setError("Не удалось войти. Попробуйте ещё раз.");
     } finally {
       setIsLoading(false);

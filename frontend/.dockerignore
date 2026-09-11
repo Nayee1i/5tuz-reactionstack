@@ -23,3 +23,10 @@
 LICENSE
 README.md
 .prisma
+node_modules
+build
+.git
+.gitignore
+.env
+.env.local
+npm-debug.log

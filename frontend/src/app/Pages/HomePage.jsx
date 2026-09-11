@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { useApi } from "../../shared/hooks/useApi";
-import { getDashboard } from "../../shared/api/dashboard.api";
+import { useApi } from "../../shared/hooks/useApi.js";
+import { getDashboard } from "../../shared/api/dashboard.api.js";
 import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 import { motion } from "framer-motion";
 
