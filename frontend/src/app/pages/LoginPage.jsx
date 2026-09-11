@@ -62,8 +62,8 @@ export default function LoginPage() {
           ctx.beginPath();
           ctx.moveTo(dot.x, dot.y);
           ctx.lineTo(mouseRef.current.x, mouseRef.current.y);
-          ctx.strokeStyle = `rgba(94, 106, 210, ${0.15 * (1 - distance / maxDist)})`;
-          ctx.lineWidth = 0.5;
+          ctx.strokeStyle = `rgba(94, 106, 210, ${0.4 * (1 - distance / maxDist)})`;
+          ctx.lineWidth = 1.2;
           ctx.stroke();
         }
 
