@@ -157,14 +157,18 @@ export default function AppLayout() {
                 background: "#374151",
                 color: "white",
                 border: "1px solid #4b5563",
-                padding: "8px 16px",
+                padding: "8px 12px",
                 borderRadius: "6px",
                 cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500"
+                fontSize: "18px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: "44px",
+                minHeight: "36px"
               }}
             >
-              Уведомления
+              🔔
               {unreadCount > 0 && (
                 <span
                   style={{
@@ -186,7 +190,7 @@ export default function AppLayout() {
                   {unreadCount}
                 </span>
               )}
-            </button>
+            </button>   
 
             {isNotificationsOpen && (
               <div
