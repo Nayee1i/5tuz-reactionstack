@@ -562,7 +562,6 @@ export default function HomePage() {
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   
 
-  const [problems, setProblems] = useState([]);
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
