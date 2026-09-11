@@ -558,19 +558,16 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
 }
 
 export default function HomePage() {
-  // 2. ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ СТРОГО В НАЧАЛЕ (до любых if и return)
   const [isStatsOpen, setIsStatsOpen] = useState(true);
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
+  const [problems, setProblems] = useState([]);
+  const [hoveredProblemId, setHoveredProblemId] = useState(null); // 🔴 Для отслеживания наведения
   
-  // Перенесли useState для problems наверх! Инициализируем пустым массивом
-  const [problems, setProblems] = useState([]); 
-
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
   const ongoingMeeting = meetingsStatus?.ongoing;
 
-  // Теперь useEffect работает корректно, так как setProblems уже объявлен выше
   useEffect(() => {
     if (data && Array.isArray(data.problems)) {
       setProblems(data.problems);
@@ -583,7 +580,6 @@ export default function HomePage() {
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  // 3. ТЕПЕРЬ РАННИЕ ВОЗВРАТЫ БЕЗОПАСНЫ
   if (!data && loading) {
     return <DashboardSkeleton />;
   } 
@@ -605,7 +601,6 @@ export default function HomePage() {
   const displayName = user.firstName || user.fullName || "пользователь";
   const subtitle = [user.direction, user.department].filter(Boolean).join(" · ");
 
-  // Обработчик добавления проблемы
   const handleAddProblem = (problemData) => {
     const newProblem = {
       id: Date.now().toString(),
@@ -620,6 +615,10 @@ export default function HomePage() {
     setProblems((prev) => [...prev, newProblem]);
   };
 
+  // 🔴 Функция удаления проблемы
+  const handleDeleteProblem = (id) => {
+    setProblems((prev) => prev.filter((problem) => problem.id !== id));
+  };
 
   return (
     <motion.section className="page" {...pageAnimation}>
@@ -773,7 +772,6 @@ export default function HomePage() {
                 <span className="badge warning">Требуют внимания</span>
               ) : null}
               
-              {/* Кнопка "Добавить" */}
               <button
                 className="button secondary"
                 type="button"
@@ -793,11 +791,19 @@ export default function HomePage() {
             <EmptyState>Открытых проблем нет</EmptyState>
           ) : (
             <div className="list">
-              {problems.map((problem, index) => (
-                <article className="list-item" key={problem.id || index}>
-                  <div>
+              {problems.map((problem) => (
+                <article 
+                  className="list-item" 
+                  key={problem.id}
+                  onMouseEnter={() => setHoveredProblemId(problem.id)}
+                  onMouseLeave={() => setHoveredProblemId(null)}
+                  style={{
+                    position: "relative",
+                    transition: "background 0.2s",
+                  }}
+                >
+                  <div style={{ paddingRight: hoveredProblemId === problem.id ? "40px" : "0" }}>
                     <div className="item-title">{problem.title}</div>
-
                     <div className="item-meta">
                       {problem.owner} · до {formatDate(problem.dueDate)}
                     </div>
@@ -806,6 +812,45 @@ export default function HomePage() {
                   <span className={`badge ${getProblemTone(problem)}`}>
                     {getProblemLabel(problem)}
                   </span>
+
+                  {/* 🔴 Кнопка удаления (появляется при наведении) */}
+                  {hoveredProblemId === problem.id && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteProblem(problem.id)}
+                      style={{
+                        position: "absolute",
+                        right: "12px",
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "#ef4444",
+                        border: "none",
+                        borderRadius: "4px",
+                        color: "white",
+                        width: "28px",
+                        height: "28px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        fontSize: "18px",
+                        lineHeight: 1,
+                        transition: "all 0.2s",
+                        opacity: 0.9,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.opacity = "1";
+                        e.currentTarget.style.background = "#dc2626";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.opacity = "0.9";
+                        e.currentTarget.style.background = "#ef4444";
+                      }}
+                      title="Удалить проблему"
+                    >
+                      ×
+                    </button>
+                  )}
                 </article>
               ))}
             </div>
@@ -851,7 +896,6 @@ export default function HomePage() {
         </section>
       </div>
 
-      {/* Модальное окно для добавления проблемы */}
       <AddProblemModal
         isOpen={isProblemModalOpen}
         onClose={() => setIsProblemModalOpen(false)}
