@@ -4,12 +4,14 @@
 
 const express = require('express');
 const cors = require('cors');
-const usersRoutes = require('./api/user'); // <-- ДОБАВИТЬ
-const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
+const usersRoutes = require('./api/user');
+const authRoutes = require('./routes/auth');
 const path = require('path');
-const miscRouter = require('./api/misc'); // <-- ДОБАВИТЬ ЭТО
+const miscRouter = require('./api/misc'); 
 const skillsRouter = require('./api/skills');
 
+const directionsRouter = require('./api/directions'); 
+const departmentsRouter = require('./api/departments'); 
 
 
 const app = express();
@@ -32,8 +34,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/skills', skillsRouter);
-app.use('/api', miscRouter);
-
+app.use('/api/directions', directionsRouter);   // <-- Подключаем направления
+app.use('/api/departments', departmentsRouter); // <-- Подключаем подразделения
 
 
 
