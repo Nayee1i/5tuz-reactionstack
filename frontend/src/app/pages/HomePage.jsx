@@ -588,7 +588,9 @@ export default function HomePage() {
   const kpis = Array.isArray(data.kpis) ? data.kpis : [];
   const skills = Array.isArray(data.skills) ? data.skills : [];
   const meetings = Array.isArray(data.meetings) ? data.meetings : [];
-  const problems = Array.isArray(data.problems) ? data.problems : [];
+  const [problems, setProblems] = useState(
+  Array.isArray(data?.problems) ? data.problems : []
+);
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
 
   const displayName = user.firstName || user.fullName || "пользователь";
@@ -596,11 +598,18 @@ export default function HomePage() {
 
   // Обработчик добавления проблемы (пока просто лог, потом будет API)
   const handleAddProblem = (problemData) => {
-    console.log("Добавлена новая проблема:", problemData);
-    // TODO: Отправить на сервер через API
-    // После успешного добавления - обновить данные
-    reload();
+  const newProblem = {
+    id: Date.now().toString(), // временный ID
+    title: problemData.title,
+    comment: problemData.comment,
+    owner: problemData.owner,
+    dueDate: problemData.dueDate,
+    severity: problemData.severity,
+    status: "OPEN",
   };
+  
+  setProblems((prev) => [...prev, newProblem]);
+};
 
   return (
     <motion.section className="page" {...pageAnimation}>
