@@ -7,10 +7,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Начинаем сидирование...');
   
-  // Очистка БД в правильном порядке (сначала зависимые таблицы)
   console.log('🧹 Очищаем базу данных...');
-  
-  // 1. Сначала удаляем все связи и зависимые сущности
   await prisma.problem.deleteMany();
   await prisma.skillConfirmation.deleteMany();
   await prisma.meetingSkill.deleteMany();
@@ -20,16 +17,9 @@ async function main() {
   await prisma.planItem.deleteMany();
   await prisma.learningPlan.deleteMany();
   await prisma.userSkill.deleteMany();
-  
-  // 2. ВАЖНО: Сначала удаляем отделы (они ссылаются на users через headId)
   await prisma.department.deleteMany();
-  
-  // 3. Теперь можно удалять пользователей
   await prisma.user.deleteMany();
-  
-  // 4. И направления
   await prisma.direction.deleteMany();
-  
   console.log('✅ База данных очищена');
 
   const hashedPassword = await bcrypt.hash('123456', 10);
@@ -42,7 +32,7 @@ async function main() {
   ]);
   console.log('✅ Направления созданы');
 
-  // 2. Создаем Админа (пока без отдела)
+  // 2. Создаем Админа
   const adminUser = await prisma.user.create({
     data: {
       login: 'admin',
@@ -54,7 +44,7 @@ async function main() {
     },
   });
 
-  // 3. Создаем корневой отдел и назначаем Админа главой
+  // 3. Создаем корневой отдел
   const rootDepartment = await prisma.department.create({
     data: {
       name: 'Департамент Разработки',
@@ -62,67 +52,95 @@ async function main() {
     },
   });
 
-  // 4. Привязываем Админа к отделу
   await prisma.user.update({
     where: { id: adminUser.id },
     data: { departmentId: rootDepartment.id },
   });
 
-  // 5. Создаем дочерние отделы
+  // 4. Создаем дочерние отделы (Frontend, Backend, QA)
   const frontDept = await prisma.department.create({
-    data: {
-      name: 'Frontend Команда',
-      parentId: rootDepartment.id,
-      headId: adminUser.id,
-    },
+    data: { name: 'Frontend Команда', parentId: rootDepartment.id, headId: adminUser.id },
   });
-
   const backDept = await prisma.department.create({
-    data: {
-      name: 'Backend Команда',
-      parentId: rootDepartment.id,
-      headId: adminUser.id,
-    },
+    data: { name: 'Backend Команда', parentId: rootDepartment.id, headId: adminUser.id },
   });
+  const qaDept = await prisma.department.create({
+    data: { name: 'QA Команда', parentId: rootDepartment.id, headId: adminUser.id },
+  });
+  console.log('✅ Подразделения созданы');
 
-  // 6. Создаем руководителей и сотрудников
+  // 5. Создаем руководителей команд
   const frontLead = await prisma.user.create({
     data: {
       login: 'front_lead',
       passwordHash: hashedPassword,
       fullName: 'Анна Петрова',
-      directionId: directions[1].id,
+      directionId: directions[1].id, // FRONT
       departmentId: frontDept.id,
       isAdmin: false,
       sessionToken: crypto.randomBytes(32).toString('hex'),
     },
   });
+  await prisma.department.update({ where: { id: frontDept.id }, data: { headId: frontLead.id } });
 
-  // Назначаем Анну главой Frontend отдела
-  await prisma.department.update({
-    where: { id: frontDept.id },
-    data: { headId: frontLead.id },
+  const backLead = await prisma.user.create({
+    data: {
+      login: 'back_lead',
+      passwordHash: hashedPassword,
+      fullName: 'Дмитрий Смирнов',
+      directionId: directions[0].id, // BACK
+      departmentId: backDept.id,
+      isAdmin: false,
+      sessionToken: crypto.randomBytes(32).toString('hex'),
+    },
   });
+  await prisma.department.update({ where: { id: backDept.id }, data: { headId: backLead.id } });
 
-  const employee1 = await prisma.user.create({
+  const qaLead = await prisma.user.create({
+    data: {
+      login: 'qa_lead',
+      passwordHash: hashedPassword,
+      fullName: 'Елена Волкова',
+      directionId: directions[2].id, // QA
+      departmentId: qaDept.id,
+      isAdmin: false,
+      sessionToken: crypto.randomBytes(32).toString('hex'),
+    },
+  });
+  await prisma.department.update({ where: { id: qaDept.id }, data: { headId: qaLead.id } });
+
+  // 6. Создаем обычных сотрудников
+  await prisma.user.create({
     data: {
       login: 'employee1',
       passwordHash: hashedPassword,
       fullName: 'Иван Иванов',
-      directionId: directions[1].id,
+      directionId: directions[1].id, // FRONT
       departmentId: frontDept.id,
       isAdmin: false,
       sessionToken: crypto.randomBytes(32).toString('hex'),
     },
   });
 
-  const employee2 = await prisma.user.create({
+  await prisma.user.create({
     data: {
       login: 'employee2',
       passwordHash: hashedPassword,
       fullName: 'Сергей Сидоров',
-      directionId: directions[0].id,
+      directionId: directions[0].id, // BACK
       departmentId: backDept.id,
+      isAdmin: false,
+      sessionToken: crypto.randomBytes(32).toString('hex'),
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      login: 'employee3',
+      passwordHash: hashedPassword,
+      fullName: 'Мария Кузнецова',
+      directionId: directions[2].id, // QA
+      departmentId: qaDept.id,
       isAdmin: false,
       sessionToken: crypto.randomBytes(32).toString('hex'),
     },
@@ -131,8 +149,9 @@ async function main() {
   console.log('✅ Сидирование завершено!');
   console.log('👤 Admin: login="admin", password="123456"');
   console.log('👤 Front Lead: login="front_lead", password="123456"');
-  console.log('👤 Employee 1: login="employee1", password="123456"');
-  console.log('👤 Employee 2: login="employee2", password="123456"');
+  console.log('👤 Back Lead: login="back_lead", password="123456"');
+  console.log('👤 QA Lead: login="qa_lead", password="123456"');
+  console.log('👤 Employees: login="employee1", "employee2", "employee3" (password: "123456")');
 }
 
 main()
