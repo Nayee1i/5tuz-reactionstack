@@ -5,6 +5,7 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 // ============ СТАРЫЕ ENUMS (без изменений) ============
@@ -55,7 +56,6 @@ model Direction {
   skills      Skill[]
 
   @@map("directions")
-  @@schema("pr")
 }
 
 model Department {
@@ -73,7 +73,6 @@ model Department {
 
   @@unique([parentId, name])
   @@map("departments")
-  @@schema("pr")
 }
 
 model User {
@@ -81,12 +80,15 @@ model User {
   login          String    @unique
   passwordHash   String    @map("password_hash")
   fullName       String    @map("full_name")
+  sessionToken   String?   @unique @map("session_token")
+  avatarUrl      String?   @map("avatar_url")
+  bio            String?
   
   // 🆕 Новые поля пользователя
   birthDate      DateTime? @map("birth_date")  // Дата рождения
 
   directionId    String    @map("direction_id") @db.Uuid
-  departmentId   String    @map("department_id") @db.Uuid
+  departmentId   String?    @map("department_id") @db.Uuid
   isAdmin        Boolean   @default(false) @map("is_admin")
   isActive       Boolean   @default(true) @map("is_active")
   authVersion    Int       @default(1) @map("auth_version")
@@ -94,7 +96,7 @@ model User {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   direction      Direction @relation(fields: [directionId], references: [id])
-  department     Department @relation(fields: [departmentId], references: [id])
+  department     Department? @relation(fields: [departmentId], references: [id])
   managedDepartments Department[] @relation("DepartmentHead")
   learningPlans  LearningPlan[] @relation("EmployeePlans")
   createdPlans   LearningPlan[] @relation("CreatorPlans")
@@ -106,8 +108,11 @@ model User {
   userSkills     UserSkill[]              // Скилы пользователя
   participatedMeetings MeetingParticipant[] // Встречи, где он участник
 
+  meetingsAsEmployee   Meeting[]   @relation("MeetingEmployee")
+  conductedMeetings    Meeting[]   @relation("MeetingConductor")
+  resolvedProblems     Problem[]   @relation("ProblemResolver")
+
   @@map("users")
-  @@schema("pr")
 }
 
 model Skill {
@@ -127,7 +132,6 @@ model Skill {
 
   @@unique([directionId, name])
   @@map("skills")
-  @@schema("pr")
 }
 
 // 🆕 НОВАЯ МОДЕЛЬ: Связь пользователя и скила (многие ко многим)
@@ -142,7 +146,6 @@ model UserSkill {
 
   @@unique([userId, skillId])
   @@map("user_skills")
-  @@schema("pr")
 }
 
 model LearningPlan {
@@ -158,7 +161,6 @@ model LearningPlan {
 
   @@unique([employeeId, year])
   @@map("learning_plans")
-  @@schema("pr")
 }
 
 model PlanItem {
@@ -177,9 +179,10 @@ model PlanItem {
   meetingSkills      MeetingSkill[]
   skillConfirmations SkillConfirmation[]
 
+  problems           Problem[]
+
   @@unique([planId, skillId])
   @@map("plan_items")
-  @@schema("pr")
 }
 
 model Meeting {
@@ -217,7 +220,6 @@ model Meeting {
   participants       MeetingParticipant[]
 
   @@map("meetings")
-  @@schema("pr")
 }
 
 // 🆕 НОВАЯ МОДЕЛЬ: Участники встречи (многие ко многим)
@@ -233,7 +235,6 @@ model MeetingParticipant {
 
   @@unique([meetingId, userId])
   @@map("meeting_participants")
-  @@schema("pr")
 }
 
 model MeetingSkill {
@@ -250,7 +251,6 @@ model MeetingSkill {
   @@id([meetingId, planItemId])
   @@unique([meetingId, planItemId, outcome])
   @@map("meeting_skills")
-  @@schema("pr")
 }
 
 model SkillConfirmation {
@@ -263,7 +263,7 @@ model SkillConfirmation {
   meetingSkill MeetingSkill @relation(fields: [meetingId, planItemId], references: [meetingId, planItemId])
 
   @@map("skill_confirmations")
-  @@schema("pr")
+  @@unique([meetingId, planItemId])
 }
 
 model MeetingLink {
@@ -277,7 +277,6 @@ model MeetingLink {
 
   @@unique([meetingId, url])
   @@map("meeting_links")
-  @@schema("pr")
 }
 
 model Problem {
@@ -299,7 +298,6 @@ model Problem {
   resolver         User?         @relation("ProblemResolver", fields: [resolvedBy], references: [id])
 
   @@map("problems")
-  @@schema("pr")
 }
 
 model AuditEvent {
@@ -313,5 +311,4 @@ model AuditEvent {
 
   @@index([entityType, entityId, createdAt])
   @@map("audit_events")
-  @@schema("pr")
 }

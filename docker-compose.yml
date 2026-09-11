@@ -1,21 +1,21 @@
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: tomsk_org
-      POSTGRES_USER: hackathon
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
-      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
-      DEMO_PASSWORD: ${DEMO_PASSWORD:?Set DEMO_PASSWORD in .env}
-    volumes:
-      - pr_postgres16_data:/var/lib/postgresql/data
-      - ./db:/scripts:ro
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hackathon -d tomsk_org"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
+  # postgres:
+  #   image: postgres:16
+  #   environment:
+  #     POSTGRES_DB: tomsk_org
+  #     POSTGRES_USER: hackathon
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+  #     APP_DB_PASSWORD: ${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}
+  #     DEMO_PASSWORD: ${DEMO_PASSWORD:?Set DEMO_PASSWORD in .env}
+  #   volumes:
+  #     - pr_postgres16_data:/var/lib/postgresql/data
+  #     - ./db:/scripts:ro
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U hackathon -d tomsk_org"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 10
 
   redis:
     image: redis:7-alpine
@@ -32,20 +32,21 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: "postgresql://pr_app:${APP_DB_PASSWORD:?Set APP_DB_PASSWORD in .env}@postgres:5432/tomsk_org"
+      DATABASE_URL: "postgresql://postgres:pHbaQgegqELmViKiYAxIKSsgUYdycDuj@altaria.proxy.rlwy.net:58643/railway?sslmode=require"
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
     ports:
       - "3001:3001"
     depends_on:
-      postgres:
-        condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
       redis:
         condition: service_started
     restart: unless-stopped
     volumes:
       - ./backend:/app
-      - /app/node_modules
+    command: sh -c "npx prisma generate && npm start"
+
 
   frontend:
     build:
@@ -53,17 +54,19 @@ services:
       dockerfile: dockerfile
     container_name: hackathon_frontend
     ports:
-      - "3000:3000"
+      - "3000:3000" # Или 5173:5173, если у тебя Vite (проверь package.json)
     environment:
-      - REACT_APP_API_URL=http://localhost:3001
-      - CHOKIDAR_USEPOLLING=true # Критично для работы hot-reload в Docker
-      - WDS_SOCKET_PORT=0        # Фикс для webpack dev server в контейнере
+      # ВАЖНО: используем имя сервиса 'backend', а не localhost!
+      - REACT_APP_API_URL=http://backend:3001 
+      - CHOKIDAR_USEPOLLING=true
+      - WDS_SOCKET_PORT=0
     depends_on:
       - backend
     restart: unless-stopped
     volumes:
       - ./frontend:/app
-      - /app/node_modules # Изолируем node_modules контейнера от хоста
+      - /app/node_modules
+  
 
   nginx:
     image: nginx:alpine
@@ -79,6 +82,6 @@ services:
       - backend
     restart: unless-stopped
 
-volumes:
-  postgres_data:
-  pr_postgres16_data:
+# volumes:
+#   postgres_data:
+#   pr_postgres16_data:

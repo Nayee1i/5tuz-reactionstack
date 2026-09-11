@@ -4,6 +4,7 @@ import {
   loadOrganization,
   saveOrganization,
 } from "../../data/organizationStore";
+import { motion, AnimatePresence } from "framer-motion";
 
 function emptyForm(parentId = "company") {
   return {
@@ -90,22 +91,41 @@ export default function DepartmentsPage() {
   const [form, setForm] = useState(() => emptyForm());
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [showForm, setShowForm] = useState(false); // <-- Добавлено
+  const [showForm, setShowForm] = useState(false);
+
+  // Анимация для появления самой страницы
+  const pageAnimation = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
+  };
+
+  // Анимация для модального окна (фон)
+  const modalOverlayAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+
+  // Анимация для модального окна (контент)
+  const modalContentAnimation = {
+    initial: { opacity: 0, scale: 0.95, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+    exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15, ease: "easeIn" } },
+  };
 
   if (!data) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <h1 className="page-title">Подразделения</h1>
-
         <div className="org-alert org-alert-error" role="alert">
           {initial.error}
         </div>
-      </section>
+      </motion.section>
     );
   }
 
   const { departments, employees } = data;
-
   const isEditing = Boolean(form.id);
   const isRoot = isEditing && form.parentId === null;
 
@@ -123,19 +143,17 @@ export default function DepartmentsPage() {
 
   function updateField(event) {
     const { name, value } = event.target;
-
     setForm((current) => ({
       ...current,
       [name]: value,
     }));
-
     setError("");
     setMessage("");
   }
 
   function selectDepartment(department) {
     setForm({ ...department });
-    setShowForm(true); // <-- Показываем форму при выборе
+    setShowForm(true);
     setError("");
     setMessage("");
   }
@@ -144,7 +162,7 @@ export default function DepartmentsPage() {
     setForm(emptyForm(form.id || "company"));
     setError("");
     setMessage("");
-    setShowForm(true); // <-- Показываем форму
+    setShowForm(true);
   }
 
   function commit(nextData, successMessage) {
@@ -165,7 +183,6 @@ export default function DepartmentsPage() {
 
   function handleSubmit(event) {
     event.preventDefault();
-
     setError("");
     setMessage("");
 
@@ -221,7 +238,15 @@ export default function DepartmentsPage() {
     );
 
     if (saved) {
-      setForm(department);
+      if (isEditing) {
+        setForm(department);
+      } else {
+        // При успешном создании закрываем форму и показываем краткое сообщение
+        setShowForm(false);
+        setForm(emptyForm());
+        setMessage("Подразделение успешно создано");
+        setTimeout(() => setMessage(""), 3000);
+      }
     }
   }
 
@@ -262,18 +287,18 @@ export default function DepartmentsPage() {
 
     if (saved) {
       setForm(emptyForm());
-      setShowForm(false); // <-- Скрываем форму после удаления
+      setShowForm(false);
     }
   }
 
   function cancelForm() {
-    setShowForm(false); // <-- Новая функция для отмены
+    setShowForm(false);
     setError("");
     setMessage("");
   }
 
   return (
-    <section className="page">
+    <motion.section className="page" {...pageAnimation}>
       <div className="page-header">
         <div>
           <h1 className="page-title">Подразделения</h1>
@@ -296,8 +321,16 @@ export default function DepartmentsPage() {
         Серверная авторизация пока не подключена.
       </div>
 
-      <div className="org-layout">
-        <section className="card org-tree-panel">
+      {/* Всплывающее сообщение об успехе (если форма закрыта) */}
+      {message && !showForm && (
+        <div className="org-alert org-alert-success" role="status" style={{ marginBottom: "16px" }}>
+          {message}
+        </div>
+      )}
+
+      {/* Дерево подразделений теперь занимает всю ширину */}
+      <div className="grid">
+        <section className="card span-12 org-tree-panel">
           <div className="card-header">
             <h2>Оргструктура</h2>
             <span className="badge info">{departments.length}</span>
@@ -311,143 +344,159 @@ export default function DepartmentsPage() {
             onSelect={selectDepartment}
           />
         </section>
-
-        {showForm && ( // <-- Условный рендеринг формы
-          <section className="card">
-            <div className="card-header">
-              <h2>
-                {isEditing ? "Редактирование" : "Новое подразделение"}
-              </h2>
-            </div>
-
-            <form className="org-form" onSubmit={handleSubmit}>
-              <div className="field">
-                <label htmlFor="department-name">Название</label>
-                <input
-                  id="department-name"
-                  name="name"
-                  value={form.name}
-                  onChange={updateField}
-                  placeholder="Например, Backend · Team B"
-                  maxLength={120}
-                  required
-                />
-              </div>
-
-              <div className="field">
-                <label htmlFor="department-parent">
-                  Родительское подразделение
-                </label>
-
-                <select
-                  id="department-parent"
-                  name="parentId"
-                  value={form.parentId ?? ""}
-                  onChange={updateField}
-                  disabled={isRoot}
-                  required={!isRoot}
-                >
-                  {isRoot ? (
-                    <option value="">Корень структуры</option>
-                  ) : (
-                    <>
-                      <option value="">Выберите подразделение</option>
-                      {parentOptions.map((department) => (
-                        <option key={department.id} value={department.id}>
-                          {department.name}
-                        </option>
-                      ))}
-                    </>
-                  )}
-                </select>
-
-                <small className="org-help">
-                  Смена родителя переносит подразделение вместе со всем
-                  его поддеревом. Корень структуры в этом прототипе фиксирован.
-                </small>
-              </div>
-
-              <div className="field">
-                <label htmlFor="department-manager">Руководитель</label>
-
-                <select
-                  id="department-manager"
-                  name="managerId"
-                  value={form.managerId}
-                  onChange={updateField}
-                >
-                  <option value="">Не назначен</option>
-
-                  {employees.map((employee) => (
-                    <option key={employee.id} value={employee.id}>
-                      {employee.fullName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {error && (
-                <div className="org-alert org-alert-error" role="alert">
-                  {error}
-                </div>
-              )}
-
-              {message && (
-                <div className="org-alert org-alert-success" role="status">
-                  {message}
-                </div>
-              )}
-
-              <div className="org-form-actions">
-                <button type="submit" className="button primary">
-                  {isEditing ? "Сохранить изменения" : "Создать"}
-                </button>
-
-                {isEditing && !isRoot && (
-                  <button
-                    type="button"
-                    className="button org-delete"
-                    onClick={handleDelete}
-                  >
-                    Удалить
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  className="button"
-                  onClick={cancelForm}
-                >
-                  Отмена
-                </button>
-              </div>
-            </form>
-
-            {isEditing && (
-              <div className="org-members">
-                <h3>Сотрудники подразделения</h3>
-
-                {selectedEmployees.length === 0 ? (
-                  <div className="empty">
-                    В этом подразделении пока нет сотрудников.
-                  </div>
-                ) : (
-                  <div className="list">
-                    {selectedEmployees.map((employee) => (
-                      <div className="list-item" key={employee.id}>
-                        <span>{employee.fullName}</span>
-                        <span className="badge info">
-                          {employee.direction}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </section>
-        )}
       </div>
-    </section>
+
+      {/* МОДАЛЬНОЕ ОКНО (по центру с размытием фона, без дубликатов) */}
+      <AnimatePresence>
+        {showForm && (
+          <motion.div
+            className="modal-overlay"
+            {...modalOverlayAnimation}
+            onClick={cancelForm} // Закрытие при клике на затемненный фон
+          >
+            <motion.div
+              className="modal-content"
+              {...modalContentAnimation}
+              onClick={(e) => e.stopPropagation()} // Запрет закрытия при клике внутри формы
+            >
+              <div className="modal-header">
+                <h2>
+                  {isEditing ? "Редактирование подразделения" : "Новое подразделение"}
+                </h2>
+                <button
+                  className="modal-close"
+                  type="button"
+                  onClick={cancelForm}
+                  aria-label="Закрыть"
+                >
+                  ×
+                </button>
+              </div>
+
+              <form className="org-form" onSubmit={handleSubmit}>
+                <div className="field">
+                  <label htmlFor="department-name">Название</label>
+                  <input
+                    id="department-name"
+                    name="name"
+                    value={form.name}
+                    onChange={updateField}
+                    placeholder="Например, Backend · Team B"
+                    maxLength={120}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div className="field">
+                  <label htmlFor="department-parent">
+                    Родительское подразделение
+                  </label>
+
+                  <select
+                    id="department-parent"
+                    name="parentId"
+                    value={form.parentId ?? ""}
+                    onChange={updateField}
+                    disabled={isRoot}
+                    required={!isRoot}
+                  >
+                    {isRoot ? (
+                      <option value="">Корень структуры</option>
+                    ) : (
+                      <>
+                        <option value="">Выберите подразделение</option>
+                        {parentOptions.map((department) => (
+                          <option key={department.id} value={department.id}>
+                            {department.name}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </select>
+
+                  <small className="org-help">
+                    Смена родителя переносит подразделение вместе со всем его поддеревом.
+                  </small>
+                </div>
+
+                <div className="field">
+                  <label htmlFor="department-manager">Руководитель</label>
+
+                  <select
+                    id="department-manager"
+                    name="managerId"
+                    value={form.managerId}
+                    onChange={updateField}
+                  >
+                    <option value="">Не назначен</option>
+
+                    {employees.map((employee) => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.fullName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {error && (
+                  <div className="org-alert org-alert-error" role="alert">
+                    {error}
+                  </div>
+                )}
+
+                {message && isEditing && (
+                  <div className="org-alert org-alert-success" role="status">
+                    {message}
+                  </div>
+                )}
+
+                <div className="modal-actions">
+                  {isEditing && !isRoot && (
+                    <button
+                      type="button"
+                      className="button org-delete"
+                      onClick={handleDelete}
+                    >
+                      Удалить
+                    </button>
+                  )}
+                  
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button type="button" className="button secondary" onClick={cancelForm}>
+                      Отмена
+                    </button>
+                    <button type="submit" className="button primary">
+                      {isEditing ? "Сохранить изменения" : "Создать"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {isEditing && (
+                <div className="org-members">
+                  <h3>Сотрудники подразделения</h3>
+
+                  {selectedEmployees.length === 0 ? (
+                    <div className="empty">
+                      В этом подразделении пока нет сотрудников.
+                    </div>
+                  ) : (
+                    <div className="list">
+                      {selectedEmployees.map((employee) => (
+                        <div className="list-item" key={employee.id}>
+                          <span>{employee.fullName}</span>
+                          <span className="badge info">{employee.direction}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.section>
   );
 }

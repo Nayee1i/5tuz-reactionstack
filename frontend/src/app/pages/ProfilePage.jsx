@@ -1,6 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useApi } from "../../shared/hooks/useApi";
 import { getProfile, uploadAvatar } from "../../shared/api/profile.api";
+import { motion } from "framer-motion";
 
 function formatDate(value) {
   if (!value) {
@@ -124,6 +125,24 @@ export default function ProfilePage() {
   const { data, loading, error, reload } = useApi(getProfile, []);
   const fileInputRef = useRef(null);
 
+  const [bio, setBio] = useState("");
+  const [bioDraft, setBioDraft] = useState("");
+  const [isEditingBio, setIsEditingBio] = useState(false);
+  const [isSavingBio, setIsSavingBio] = useState(false);
+
+  // При первой загрузке данных заполняем локальное состояние био
+  const dataLoaded = !loading && !error && !!data;
+  if (dataLoaded && !bio && data.user?.bio) {
+    setBio(data.user.bio);
+    setBioDraft(data.user.bio);
+  }
+
+  const pageAnimation = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
+  };
+
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
@@ -134,42 +153,64 @@ export default function ProfilePage() {
       return;
     }
 
-    // Пока заглушка — в будущем обновим аватар через API и перезагрузим профиль
     try {
       const result = await uploadAvatar(file);
       console.log("Аватар загружен:", result);
-      // Здесь позже можно будет обновить локальное состояние или вызвать reload()
     } catch (err) {
       console.error(err);
     }
 
-    // Сбросим значение input, чтобы можно было выбрать тот же файл снова
     event.target.value = "";
+  };
+
+  const startEditBio = () => {
+    setBioDraft(bio);
+    setIsEditingBio(true);
+  };
+
+  const saveBio = async () => {
+    setIsSavingBio(true);
+    try {
+      // TODO: заменить на реальный запрос к бэкенду
+      // await api.patch("/api/users/me/bio", { bio: bioDraft });
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      setBio(bioDraft);
+      setIsEditingBio(false);
+    } catch (err) {
+      console.error("Не удалось сохранить описание:", err);
+    } finally {
+      setIsSavingBio(false);
+    }
+  };
+
+  const cancelBio = () => {
+    setBioDraft(bio);
+    setIsEditingBio(false);
   };
 
   if (loading) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <div className="card">
           <div className="empty">Загрузка профиля...</div>
         </div>
-      </section>
+      </motion.section>
     );
   }
 
   if (error) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <ErrorState message={error} onRetry={reload} />
-      </section>
+      </motion.section>
     );
   }
 
   if (!data) {
     return (
-      <section className="page">
+      <motion.section className="page" {...pageAnimation}>
         <ErrorState message="Данные профиля не получены" onRetry={reload} />
-      </section>
+      </motion.section>
     );
   }
 
@@ -179,7 +220,7 @@ export default function ProfilePage() {
   const inProgressSkills = skills.filter((s) => s.status !== "confirmed");
 
   return (
-    <section className="page">
+    <motion.section className="page" {...pageAnimation}>
       <header className="page-header">
         <div>
           <h1 className="page-title">Профиль</h1>
@@ -240,6 +281,66 @@ export default function ProfilePage() {
                 ) : null}
               </div>
             </div>
+          </div>
+
+          {/* ===== О СЕБЕ ===== */}
+          <div className="profile-bio">
+            <div className="profile-bio-label">О себе</div>
+
+            {isEditingBio ? (
+              <div className="profile-bio-editor">
+                <textarea
+                  value={bioDraft}
+                  onChange={(event) => setBioDraft(event.target.value)}
+                  placeholder="Расскажите о своём опыте, интересах и целях развития"
+                  maxLength={600}
+                  autoFocus
+                />
+
+                <div className="profile-bio-meta">
+                  <span>{bioDraft.length} / 600</span>
+
+                  <div className="profile-bio-actions">
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={cancelBio}
+                      disabled={isSavingBio}
+                    >
+                      Отмена
+                    </button>
+
+                    <button
+                      className="button primary"
+                      type="button"
+                      onClick={saveBio}
+                      disabled={isSavingBio}
+                    >
+                      {isSavingBio ? "Сохранение..." : "Сохранить"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : bio ? (
+              <button
+                type="button"
+                className="profile-bio-display"
+                onClick={startEditBio}
+                title="Нажмите, чтобы отредактировать"
+              >
+                <p className="profile-bio-text">{bio}</p>
+                <span className="profile-bio-edit-hint">Редактировать</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="profile-bio-empty"
+                onClick={startEditBio}
+              >
+                <span>Добавьте информацию о себе</span>
+                <span className="profile-bio-edit-hint">Расскажите о своём опыте и целях</span>
+              </button>
+            )}
           </div>
 
           <div className="profile-hero-stats">
@@ -423,6 +524,6 @@ export default function ProfilePage() {
           )}
         </section>
       </div>
-    </section>
+    </motion.section>
   );
 }

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { MeetingsStatusProvider } from "./../shared/context/meetings-status.context.jsx";
+import { MeetingsStatusProvider } from "../shared/context/meetings-status.context.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import MeetingsPage from "./pages/MeetingsPage.jsx";
@@ -33,18 +33,16 @@ export default function App() {
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="departments" element={<DepartmentsPage />} />
           <Route path="profile" element={<ProfilePage />} />
-
-          {/* Административные разделы */}
           <Route path="admin/users" element={<AdminUsersPage />} />
-          <Route path="admin/skills" element={<SkillsDirectoryPage />} />
+          <Route path="directories/skills" element={<SkillsDirectoryPage />} />
         </Route>
 
-        {/* Чтобы старые ссылки не ломались */}
+        {/* Редиректы со старых путей */}
         <Route path="/meetings" element={<Navigate to="/app/meetings" replace />} />
         <Route path="/profile" element={<Navigate to="/app/profile" replace />} />
         <Route path="/departments" element={<Navigate to="/app/departments" replace />} />
         <Route path="/admin/users" element={<Navigate to="/app/admin/users" replace />} />
-        <Route path="/admin/skills" element={<Navigate to="/app/admin/skills" replace />} />
+        <Route path="/directories/skills" element={<Navigate to="/app/directories/skills" replace />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />

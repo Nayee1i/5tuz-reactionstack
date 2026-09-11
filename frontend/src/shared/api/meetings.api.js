@@ -1,10 +1,13 @@
 import { api } from "./client";
 import { endpoints } from "./endpoints";
 import {
-  meetingsStatusMock,
-  upcomingMeetingsMock,
-  meetingsHistoryMock,
-} from "../mocks/meetings.mock";
+  selectUpcomingMeetings,
+  selectHistoryMeetings,
+  selectMeetingById,
+  selectMeetingsStatus,
+  insertMeeting,
+  deleteMeetingById,
+} from "../mocks/meetings.store";
 
 const USE_MOCK = process.env.REACT_APP_USE_MOCK === "true";
 
@@ -38,8 +41,6 @@ function normalizeMeeting(raw = {}) {
     return null;
   }
 
-  const startsAt = raw.startsAt ?? raw.starts_at ?? null;
-  const endsAt = raw.endsAt ?? raw.ends_at ?? null;
   const status = raw.status ?? "scheduled";
 
   return {
@@ -47,13 +48,13 @@ function normalizeMeeting(raw = {}) {
     title: raw.title ?? "Встреча",
     type: raw.type ?? "PR",
     format: raw.format ?? "",
-    startsAt,
-    endsAt,
+    startsAt: raw.startsAt ?? raw.starts_at ?? null,
+    endsAt: raw.endsAt ?? raw.ends_at ?? null,
     status,
     statusLabel: raw.statusLabel ?? raw.status_label ?? null,
     link: raw.link ?? raw.meeting_link ?? null,
-    conductor: normalizePerson(raw.conductor ?? raw.host ?? raw.interviewer),
-    participant: normalizePerson(raw.participant ?? raw.employee ?? raw.user),
+    conductor: normalizePerson(raw.conductor ?? raw.host),
+    participant: normalizePerson(raw.participant ?? raw.employee),
     summary: raw.summary ?? raw.summary_text ?? "",
     confirmedSkillsCount:
       raw.confirmedSkillsCount ?? raw.confirmed_skills_count ?? 0,
@@ -83,7 +84,6 @@ function normalizeUpcoming(payload) {
 
 function normalizeHistory(payload) {
   const data = payload?.data ?? payload ?? {};
-
   const items = Array.isArray(data) ? data : data.items ?? [];
 
   return {
@@ -96,8 +96,8 @@ function normalizeHistory(payload) {
 
 export async function getMeetingsStatus() {
   if (USE_MOCK) {
-    await delay(350);
-    return normalizeStatus(meetingsStatusMock);
+    await delay(80);
+    return normalizeStatus(selectMeetingsStatus());
   }
 
   const response = await api.get(endpoints.meetingsStatus);
@@ -106,8 +106,8 @@ export async function getMeetingsStatus() {
 
 export async function getUpcomingMeetings(limit = 20) {
   if (USE_MOCK) {
-    await delay(500);
-    return normalizeUpcoming(upcomingMeetingsMock);
+    await delay(100);
+    return normalizeUpcoming(selectUpcomingMeetings().slice(0, limit));
   }
 
   const response = await api.get(`${endpoints.meetingsUpcoming}?limit=${limit}`);
@@ -116,8 +116,8 @@ export async function getUpcomingMeetings(limit = 20) {
 
 export async function getMeetingsHistory(page = 1, pageSize = 10) {
   if (USE_MOCK) {
-    await delay(550);
-    return normalizeHistory(meetingsHistoryMock);
+    await delay(120);
+    return normalizeHistory(selectHistoryMeetings(page, pageSize));
   }
 
   const response = await api.get(
@@ -125,4 +125,41 @@ export async function getMeetingsHistory(page = 1, pageSize = 10) {
   );
 
   return normalizeHistory(response);
+}
+
+export async function getMeetingById(id) {
+  if (USE_MOCK) {
+    await delay(120);
+
+    const meeting = selectMeetingById(id);
+
+    if (!meeting) {
+      throw new Error("Встреча не найдена");
+    }
+
+    return normalizeMeeting(meeting);
+  }
+
+  const response = await api.get(endpoints.meetingById(id));
+  return normalizeMeeting(response);
+}
+
+export async function createMeeting(payload) {
+  if (USE_MOCK) {
+    await delay(100);
+    return normalizeMeeting(insertMeeting(payload));
+  }
+
+  const response = await api.post(endpoints.meetings, payload);
+  return normalizeMeeting(response);
+}
+
+export async function deleteMeeting(id) {
+  if (USE_MOCK) {
+    await delay(100);
+    return normalizeMeeting(deleteMeetingById(id));
+  }
+
+  await api.delete(endpoints.meetingById(id));
+  return true;
 }

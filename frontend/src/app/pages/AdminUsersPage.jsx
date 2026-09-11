@@ -1,269 +1,239 @@
-import { useState } from "react";
-import {
-  loadOrganization,
-  saveOrganization,
-} from "../../data/organizationStore";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-const DIRECTIONS = ["BACK", "FRONT", "QA"];
+const API_URL = "http://159.194.230.135:3001/api";
 
 function emptyForm(departmentId = "") {
   return {
     id: "",
     fullName: "",
-    direction: "BACK",
+    directionId: "",
     departmentId,
     isAdmin: false,
   };
 }
 
 export default function AdminUsersPage() {
-  const [initial] = useState(() => {
-    try {
-      return {
-        data: loadOrganization(),
-        error: "",
-      };
-    } catch {
-      return {
-        data: null,
-        error:
-          "Не удалось загрузить пользователей. Проверьте доступ к хранилищу браузера и сохранённые данные.",
-      };
-    }
-  });
-
-  const [data, setData] = useState(initial.data);
-
-  const [form, setForm] = useState(() =>
-    emptyForm(initial.data?.departments[0]?.id || "")
-  );
-
+  const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [directions, setDirections] = useState([]);
+  
+  const [form, setForm] = useState(emptyForm());
   const [search, setSearch] = useState("");
   const [directionFilter, setDirectionFilter] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("");
-
+  
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [showForm, setShowForm] = useState(false); // <-- Добавлено
+  const [showForm, setShowForm] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!data) {
-    return (
-      <section className="page">
-        <h1 className="page-title">Пользователи</h1>
+  const pageAnimation = {
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
+    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
+  };
+  const modalOverlayAnimation = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  };
+  const modalContentAnimation = {
+    initial: { opacity: 0, scale: 0.95, y: 10 },
+    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
+    exit: { opacity: 0, scale: 0.95, y: 10, transition: { duration: 0.15, ease: "easeIn" } },
+  };
 
-        <div className="org-alert org-alert-error" role="alert">
-          {initial.error}
-        </div>
-      </section>
-    );
-  }
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const { employees, departments } = data;
-  const isEditing = Boolean(form.id);
+  useEffect(() => {
+    fetchUsers();
+  }, [search, directionFilter, departmentFilter]);
 
-  function departmentName(id) {
-    return (
-      departments.find((department) => department.id === id)?.name ||
-      "Не назначено"
-    );
-  }
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [usersRes, deptsRes, dirsRes] = await Promise.all([
+        fetch(`${API_URL}/users`),
+        fetch(`${API_URL}/departments`),
+        fetch(`${API_URL}/directions`),
+      ]);
 
-  function managedDepartments(employeeId) {
-    return departments.filter(
-      (department) => department.managerId === employeeId
-    );
-  }
+      if (!usersRes.ok || !deptsRes.ok || !dirsRes.ok) {
+        throw new Error("Ошибка сети при загрузке данных");
+      }
 
-  const query = search.trim().toLocaleLowerCase("ru");
+      const usersData = await usersRes.json();
+      const deptsData = await deptsRes.json();
+      const dirsData = await dirsRes.json();
 
-  const filteredEmployees = employees.filter((employee) => {
-    const matchesSearch = employee.fullName
-      .toLocaleLowerCase("ru")
-      .includes(query);
+      // 🛡️ ЗАЩИТА: Проверяем, что пришли именно массивы
+      if (Array.isArray(usersData)) setUsers(usersData);
+      else {
+        console.error("Бэкенд вернул не массив users:", usersData);
+        setError("Ошибка формата данных пользователей");
+      }
 
-    const matchesDirection =
-      !directionFilter || employee.direction === directionFilter;
+      if (Array.isArray(deptsData)) setDepartments(deptsData);
+      if (Array.isArray(dirsData)) setDirections(dirsData);
+      
+      if (Array.isArray(deptsData) && deptsData.length > 0) {
+        setForm(prev => ({ ...prev, departmentId: deptsData[0].id }));
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Не удалось загрузить данные. Проверьте, запущен ли бэкенд на порту 3001.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    const matchesDepartment =
-      !departmentFilter || employee.departmentId === departmentFilter;
+  const fetchUsers = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      if (directionFilter) params.append("directionId", directionFilter);
+      if (departmentFilter) params.append("departmentId", departmentFilter);
 
-    return matchesSearch && matchesDirection && matchesDepartment;
-  });
-
-  const selectedManagedDepartments = isEditing
-    ? managedDepartments(form.id)
-    : [];
+      const res = await fetch(`${API_URL}/users?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        // 🛡️ ЗАЩИТА: Обновляем стейт только если это массив
+        if (Array.isArray(data)) {
+          setUsers(data);
+        } else {
+          console.error("Бэкенд вернул не массив при фильтрации:", data);
+          setError("Ошибка при фильтрации: неверный формат данных");
+        }
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.error || "Ошибка при фильтрации");
+      }
+    } catch (err) {
+      console.error("Ошибка фильтрации:", err);
+      setError("Ошибка сети при фильтрации");
+    }
+  };
 
   function updateField(event) {
     const { name, type, checked, value } = event.target;
-
     setForm((current) => ({
       ...current,
       [name]: type === "checkbox" ? checked : value,
     }));
-
     setError("");
     setMessage("");
   }
 
   function startCreating() {
-    setForm(
-      emptyForm(departmentFilter || departments[0]?.id || "")
-    );
+    setForm(emptyForm(departmentFilter || departments[0]?.id || ""));
     setError("");
     setMessage("");
-    setShowForm(true); // <-- Показываем форму
+    setShowForm(true);
   }
 
   function editEmployee(employee) {
     setForm({
       id: employee.id,
       fullName: employee.fullName,
-      direction: employee.direction,
+      directionId: employee.directionId,
       departmentId: employee.departmentId,
       isAdmin: Boolean(employee.isAdmin),
     });
-    setShowForm(true); // <-- Показываем форму при редактировании
+    setShowForm(true);
     setError("");
     setMessage("");
   }
 
-  function commit(nextData, successMessage) {
-    try {
-      saveOrganization(nextData);
-      setData(nextData);
-      setError("");
-      setMessage(successMessage);
-      return true;
-    } catch {
-      setMessage("");
-      setError(
-        "Не удалось сохранить изменения. Проверьте доступность и свободное место в хранилище браузера."
-      );
-      return false;
-    }
-  }
-
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-
     setError("");
     setMessage("");
 
     const fullName = form.fullName.trim();
-
     if (!fullName) {
       setError("Введите ФИО сотрудника.");
       return;
     }
-
-    if (!DIRECTIONS.includes(form.direction)) {
+    if (!form.directionId) {
       setError("Выберите направление.");
       return;
     }
 
-    const departmentExists = departments.some(
-      (department) => department.id === form.departmentId
-    );
+    const isEditing = Boolean(form.id);
+    const url = isEditing ? `${API_URL}/users/${form.id}` : `${API_URL}/users`;
+    const method = isEditing ? "PUT" : "POST";
 
-    if (!departmentExists) {
-      setError("Выберите существующее подразделение.");
-      return;
-    }
+    const defaultLogin = isEditing ? undefined : `${fullName.toLowerCase().replace(/\s+/g, '.')}@company.test`;
+    const defaultPassword = isEditing ? undefined : "123456";
 
-    const existingEmployee = employees.find(
-      (employee) => employee.id === form.id
-    );
-
-    if (isEditing && !existingEmployee) {
-      setError("Пользователь не найден. Обновите страницу.");
-      return;
-    }
-
-    const employee = {
-      ...existingEmployee,
-      id:
-        form.id ||
-        `employee-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 10)}`,
+    const payload = {
       fullName,
-      direction: form.direction,
-      departmentId: form.departmentId,
+      directionId: form.directionId,
+      departmentId: form.departmentId || null,
       isAdmin: form.isAdmin,
+      ...(defaultLogin && { login: defaultLogin, password: defaultPassword }),
     };
 
-    const nextEmployees = isEditing
-      ? employees.map((item) =>
-          item.id === employee.id ? employee : item
-        )
-      : [...employees, employee];
-
-    const saved = commit(
-      { ...data, employees: nextEmployees },
-      isEditing
-        ? "Данные пользователя сохранены."
-        : "Пользователь добавлен."
-    );
-
-    if (saved) {
-      setForm({
-        id: employee.id,
-        fullName: employee.fullName,
-        direction: employee.direction,
-        departmentId: employee.departmentId,
-        isAdmin: employee.isAdmin,
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Ошибка сервера");
+
+      setMessage(isEditing ? "Данные пользователя сохранены." : `Пользователь добавлен. Логин: ${defaultLogin}, Пароль: ${defaultPassword}`);
+      setShowForm(false);
+      fetchData();
+    } catch (err) {
+      setError(err.message);
     }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!form.id) return;
+    if (!window.confirm(`Удалить пользователя «${form.fullName}»?`)) return;
 
-    setError("");
-    setMessage("");
+    try {
+      const res = await fetch(`${API_URL}/users/${form.id}`, { method: "DELETE" });
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || "Ошибка удаления");
 
-    const managed = managedDepartments(form.id);
-
-    if (managed.length > 0) {
-      setError(
-        `Пользователь руководит подразделениями: ${managed
-          .map((department) => department.name)
-          .join(", ")}. Сначала назначьте других руководителей в оргструктуре.`
-      );
-      return;
-    }
-
-    if (!window.confirm(`Удалить пользователя «${form.fullName}»?`)) {
-      return;
-    }
-
-    const saved = commit(
-      {
-        ...data,
-        employees: employees.filter(
-          (employee) => employee.id !== form.id
-        ),
-      },
-      "Пользователь удалён."
-    );
-
-    if (saved) {
-      setForm(
-        emptyForm(departmentFilter || departments[0]?.id || "")
-      );
-      setShowForm(false); // <-- Скрываем форму после удаления
+      setMessage("Пользователь удалён.");
+      setShowForm(false);
+      fetchData();
+    } catch (err) {
+      setError(err.message);
     }
   }
 
   function cancelForm() {
-    setShowForm(false); // <-- Новая функция для отмены
+    setShowForm(false);
     setError("");
     setMessage("");
   }
 
+  if (isLoading) {
+    return (
+      <motion.section className="page" {...pageAnimation}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-gray-500">Загрузка данных...</p>
+        </div>
+      </motion.section>
+    );
+  }
+
+  // 🛡️ ГЛАВНОЕ ИСПРАВЛЕНИЕ: Гарантируем, что filteredUsers ВСЕГДА массив
+  const filteredUsers = Array.isArray(users) ? users : [];
+
   return (
-    <section className="page">
+    <motion.section className="page" {...pageAnimation}>
       <div className="page-header">
         <div>
           <h1 className="page-title">Пользователи</h1>
@@ -271,31 +241,20 @@ export default function AdminUsersPage() {
             Администрирование пользователей и распределение по подразделениям
           </p>
         </div>
-
-        <button
-          className="button primary"
-          type="button"
-          onClick={startCreating}
-        >
+        <button className="button primary" type="button" onClick={startCreating}>
           + Пользователь
         </button>
       </div>
 
-      <div className="org-demo-note">
-        Деморежим администратора. Здесь создаются тестовые записи
-        сотрудников, а не реальные учётные записи для входа.
-        Изменения доступны только в этом браузере.
-      </div>
+      {error && <div className="org-alert org-alert-error" style={{marginBottom: '16px'}} role="alert">{error}</div>}
 
-      <div className="users-layout">
-        <section className="card">
+      <div className="grid">
+        <section className="card span-12">
           <div className="card-header">
             <h2>Список пользователей</h2>
-            <span className="badge info">
-              {filteredEmployees.length} / {employees.length}
-            </span>
+            <span className="badge info">{filteredUsers.length} найдено</span>
           </div>
-
+          
           <div className="users-filters">
             <div className="field">
               <label htmlFor="users-search">Поиск по ФИО</label>
@@ -304,65 +263,41 @@ export default function AdminUsersPage() {
                 type="search"
                 placeholder="Введите имя сотрудника"
                 value={search}
-                onChange={(event) => setSearch(event.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-
             <div className="field">
               <label htmlFor="users-direction">Направление</label>
               <select
                 id="users-direction"
                 value={directionFilter}
-                onChange={(event) =>
-                  setDirectionFilter(event.target.value)
-                }
+                onChange={(e) => setDirectionFilter(e.target.value)}
               >
                 <option value="">Все направления</option>
-
-                {DIRECTIONS.map((direction) => (
-                  <option key={direction} value={direction}>
-                    {direction}
-                  </option>
+                {Array.isArray(directions) && directions.map((dir) => (
+                  <option key={dir.id} value={dir.id}>{dir.name}</option>
                 ))}
               </select>
             </div>
-
             <div className="field">
               <label htmlFor="users-department">Подразделение</label>
               <select
                 id="users-department"
                 value={departmentFilter}
-                onChange={(event) =>
-                  setDepartmentFilter(event.target.value)
-                }
+                onChange={(e) => setDepartmentFilter(e.target.value)}
               >
                 <option value="">Все подразделения</option>
-
-                {departments.map((department) => (
-                  <option key={department.id} value={department.id}>
-                    {department.name}
-                  </option>
+                {Array.isArray(departments) && departments.map((dept) => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
                 ))}
               </select>
             </div>
           </div>
 
-          <p className="org-help users-filter-note">
-            Фильтр подразделения не включает дочерние подразделения.
-          </p>
-
-          {filteredEmployees.length === 0 ? (
-            <div className="empty">
-              Пользователи не найдены. Измените фильтры или добавьте
-              пользователя.
-            </div>
+          {filteredUsers.length === 0 ? (
+            <div className="empty">Пользователи не найдены. Измените фильтры или добавьте пользователя.</div>
           ) : (
-            <div
-              className="users-table-wrap"
-              role="region"
-              aria-label="Таблица пользователей"
-              tabIndex={0}
-            >
+            <div className="users-table-wrap" role="region" aria-label="Таблица пользователей" tabIndex={0}>
               <table className="users-table">
                 <thead>
                   <tr>
@@ -372,205 +307,129 @@ export default function AdminUsersPage() {
                     <th scope="col">Действие</th>
                   </tr>
                 </thead>
-
                 <tbody>
-                  {filteredEmployees.map((employee) => {
-                    const managed = managedDepartments(employee.id);
-
-                    return (
-                      <tr
-                        key={employee.id}
-                        className={
-                          form.id === employee.id ? "is-selected" : ""
-                        }
-                      >
-                        <td>
-                          <div className="item-title">
-                            {employee.fullName}
-                          </div>
-                          <div className="item-meta">
-                            {employee.direction}
-                          </div>
-                        </td>
-
-                        <td>
-                          {departmentName(employee.departmentId)}
-                        </td>
-
-                        <td>
-                          <div className="users-statuses">
-                            {employee.isAdmin && (
-                              <span className="badge info">
-                                Администратор
-                              </span>
-                            )}
-
-                            {managed.length > 0 && (
-                              <span className="badge success">
-                                Руководитель
-                              </span>
-                            )}
-
-                            {!employee.isAdmin &&
-                              managed.length === 0 && (
-                                <span className="badge neutral">
-                                  Сотрудник
-                                </span>
-                              )}
-                          </div>
-                        </td>
-
-                        <td>
-                          <button
-                            type="button"
-                            className="link-button"
-                            aria-label={`Редактировать: ${employee.fullName}`}
-                            onClick={() => editEmployee(employee)}
-                          >
-                            Изменить
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {filteredUsers.map((employee) => (
+                    <tr key={employee.id} className={form.id === employee.id ? "is-selected" : ""}>
+                      <td>
+                        <div className="item-title">{employee.fullName}</div>
+                        <div className="item-meta">{employee.direction}</div>
+                      </td>
+                      <td>{employee.departmentName}</td>
+                      <td>
+                        <div className="users-statuses">
+                          {employee.isAdmin && <span className="badge info">Администратор</span>}
+                          {employee.managedDepartments?.length > 0 && (
+                            <span className="badge success">Руководитель</span>
+                          )}
+                          {!employee.isAdmin && (!employee.managedDepartments || employee.managedDepartments.length === 0) && (
+                            <span className="badge neutral">Сотрудник</span>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="link-button"
+                          onClick={() => editEmployee(employee)}
+                        >
+                          Изменить
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           )}
         </section>
-
-        {showForm && ( // <-- Условный рендеринг формы
-          <section className="card">
-            <div className="card-header">
-              <h2>
-                {isEditing ? "Редактирование пользователя" : "Новый пользователь"}
-              </h2>
-            </div>
-
-            <form className="org-form" onSubmit={handleSubmit}>
-              <div className="field">
-                <label htmlFor="employee-name">ФИО</label>
-                <input
-                  id="employee-name"
-                  name="fullName"
-                  value={form.fullName}
-                  onChange={updateField}
-                  placeholder="Иванов Иван Иванович"
-                  maxLength={150}
-                  required
-                />
-              </div>
-
-              <div className="field">
-                <label htmlFor="employee-direction">Направление</label>
-                <select
-                  id="employee-direction"
-                  name="direction"
-                  value={form.direction}
-                  onChange={updateField}
-                  required
-                >
-                  {DIRECTIONS.map((direction) => (
-                    <option key={direction} value={direction}>
-                      {direction}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="field">
-                <label htmlFor="employee-department">Подразделение</label>
-                <select
-                  id="employee-department"
-                  name="departmentId"
-                  value={form.departmentId}
-                  onChange={updateField}
-                  required
-                >
-                  <option value="">Выберите подразделение</option>
-
-                  {departments.map((department) => (
-                    <option key={department.id} value={department.id}>
-                      {department.name}
-                    </option>
-                  ))}
-                </select>
-
-                <small className="org-help">
-                  Чтобы перенести сотрудника, выберите другое
-                  подразделение и сохраните изменения.
-                </small>
-              </div>
-
-              <label className="users-checkbox">
-                <input
-                  type="checkbox"
-                  name="isAdmin"
-                  checked={form.isAdmin}
-                  onChange={updateField}
-                />
-                <span>Административный доступ (тестовый признак)</span>
-              </label>
-
-              <div className="users-access-note">
-                Руководитель назначается на странице «Подразделения».
-                Перенос сотрудника сам по себе не снимает с него
-                руководство другими подразделениями.
-              </div>
-
-              {selectedManagedDepartments.length > 0 && (
-                <div>
-                  <div className="item-title">
-                    Руководит подразделениями
-                  </div>
-
-                  <ul className="users-managed-list">
-                    {selectedManagedDepartments.map((department) => (
-                      <li key={department.id}>{department.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {error && (
-                <div className="org-alert org-alert-error" role="alert">
-                  {error}
-                </div>
-              )}
-
-              {message && (
-                <div className="org-alert org-alert-success" role="status">
-                  {message}
-                </div>
-              )}
-
-              <div className="org-form-actions">
-                <button className="button primary" type="submit">
-                  {isEditing ? "Сохранить изменения" : "Добавить"}
-                </button>
-
-                {isEditing && (
-                  <button
-                    className="button org-delete"
-                    type="button"
-                    onClick={handleDelete}
-                  >
-                    Удалить
-                  </button>
-                )}
-
-                <button
-                  className="button"
-                  type="button"
-                  onClick={cancelForm}
-                >
-                  Отмена
-                </button>
-              </div>
-            </form>
-          </section>
-        )}
       </div>
-    </section>
+
+      <AnimatePresence>
+        {showForm && (
+          <motion.div className="modal-overlay" {...modalOverlayAnimation} onClick={cancelForm}>
+            <motion.div className="modal-content" {...modalContentAnimation} onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>{form.id ? "Редактирование пользователя" : "Новый пользователь"}</h2>
+                <button className="modal-close" type="button" onClick={cancelForm} aria-label="Закрыть">×</button>
+              </div>
+              
+              <form className="org-form" onSubmit={handleSubmit}>
+                <div className="field">
+                  <label htmlFor="employee-name">ФИО</label>
+                  <input
+                    id="employee-name"
+                    name="fullName"
+                    value={form.fullName}
+                    onChange={updateField}
+                    placeholder="Иванов Иван Иванович"
+                    maxLength={150}
+                    required
+                  />
+                </div>
+                
+                <div className="field">
+                  <label htmlFor="employee-direction">Направление</label>
+                  <select
+                    id="employee-direction"
+                    name="directionId"
+                    value={form.directionId}
+                    onChange={updateField}
+                    required
+                  >
+                    <option value="">Выберите направление</option>
+                    {Array.isArray(directions) && directions.map((dir) => (
+                      <option key={dir.id} value={dir.id}>{dir.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label htmlFor="employee-department">Подразделение</label>
+                  <select
+                    id="employee-department"
+                    name="departmentId"
+                    value={form.departmentId}
+                    onChange={updateField}
+                    required
+                  >
+                    <option value="">Выберите подразделение</option>
+                    {Array.isArray(departments) && departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>{dept.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <label className="users-checkbox">
+                  <input
+                    type="checkbox"
+                    name="isAdmin"
+                    checked={form.isAdmin}
+                    onChange={updateField}
+                  />
+                  <span>Административный доступ</span>
+                </label>
+
+                {error && <div className="org-alert org-alert-error" role="alert">{error}</div>}
+                {message && <div className="org-alert org-alert-success" role="status">{message}</div>}
+
+                <div className="modal-actions">
+                  {form.id && (
+                    <button className="button org-delete" type="button" onClick={handleDelete}>
+                      Удалить
+                    </button>
+                  )}
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button className="button secondary" type="button" onClick={cancelForm}>Отмена</button>
+                    <button className="button primary" type="submit">
+                      {form.id ? "Сохранить изменения" : "Добавить"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.section>
   );
 }

@@ -6,11 +6,10 @@ const fs = require('fs');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-// const { requireAuth } = require('../middleware/auth'); // Раскомментируйте, когда настроите авторизацию
-const { prisma } = require('../db.js'); // Убедитесь, что путь к prisma верный
+const { prisma } = require('../db.js');
 
 // ============================================================
-// МУЛЬТЕР — загрузка аватаров (оставляем как было)
+// МУЛЬТЕР — загрузка аватаров
 // ============================================================
 const avatarsDir = path.join(__dirname, '..', '..', 'uploads', 'avatars');
 if (!fs.existsSync(avatarsDir)) {
@@ -50,11 +49,10 @@ function handleUpload(req, res, next) {
 }
 
 // ============================================================
-// 🛠 АДМИНСКИЕ ЭНДПОИНТЫ (Для AdminUsersPage.jsx)
-// Эти роуты НЕ требуют req.user, чтобы вы могли тестировать админку прямо сейчас
+// 🛠 АДМИНСКИЕ И ОБЩИЕ ЭНДПОИНТЫ
 // ============================================================
 
-// 1. GET /api/users - Получить список пользователей с фильтрацией
+// 1. GET /api/users - Получить список пользователей
 router.get('/', async (req, res) => {
   try {
     const { search, directionId, departmentId } = req.query;
@@ -76,7 +74,6 @@ router.get('/', async (req, res) => {
       orderBy: { fullName: 'asc' }
     });
 
-    // 🛡️ ГАРАНТИРУЕМ, что вернется массив, даже если пользователей нет
     const formattedUsers = users.map(u => ({
       id: u.id,
       fullName: u.fullName,
@@ -91,7 +88,6 @@ router.get('/', async (req, res) => {
     res.json(formattedUsers);
   } catch (error) {
     console.error('GET /api/users error:', error);
-    // 🛡️ Возвращаем пустой массив при ошибке, чтобы фронтенд не падал на .map()
     res.status(500).json([]); 
   }
 });
@@ -189,24 +185,10 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-
-// ============================================================
-// 👤 ЛИЧНЫЕ ЭНДПОИНТЫ ПОЛЬЗОВАТЕЛЯ (Требуют авторизации)
-// ============================================================
-
-// Вспомогательная функция для проверки авторизации (заглушка, если middleware отключен)
-function checkAuth(req, res, next) {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Требуется авторизация' });
-  }
-  next();
-}
-
-// router.use(checkAuth); // Раскомментируйте, когда настроите токены
-
+// 5. GET /api/users/me/profile - Данные текущего пользователя
 router.get('/me/profile', async (req, res) => {
   try {
-    // 🛡️ Защита от undefined req.user
+    // Для хакатона: если нет req.user (мидлваря), берем из query или отдаем ошибку
     const userId = req.user ? req.user.id : req.query.mockUserId; 
     if (!userId) return res.status(401).json({ error: 'Пользователь не авторизован' });
 
@@ -220,7 +202,6 @@ router.get('/me/profile', async (req, res) => {
 
     if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
 
-    // Упрощенный формат для хакатона (убрали несуществующие в схеме поля avatarUrl/bio, чтобы не было ошибок Prisma)
     res.json({
       user: {
         id: user.id,
@@ -233,8 +214,8 @@ router.get('/me/profile', async (req, res) => {
         fullName: user.department.head.fullName,
         direction: user.department.head.direction?.name || '',
       } : null,
-      achievements: [], // Можно заполнить позже, если успеете
-      skills: [] // Можно заполнить позже
+      achievements: [], 
+      skills: [] 
     });
   } catch (error) {
     console.error('GET /users/me/profile error:', error);
@@ -242,6 +223,20 @@ router.get('/me/profile', async (req, res) => {
   }
 });
 
-// Остальные /me роуты можно добавить по аналогии, когда дойдете до них
+// 6. POST /api/users/me/avatar - Загрузка аватара
+router.post('/me/avatar', handleUpload, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Файл не выбран' });
+    }
+    const userId = req.user ? req.user.id : 'anonymous';
+    const avatarUrl = `/avatars/${userId}${path.extname(req.file.originalname).toLowerCase()}`;
+    
+    res.json({ avatarUrl, message: 'Аватар успешно загружен' });
+  } catch (error) {
+    console.error('POST /users/me/avatar error:', error);
+    res.status(500).json({ error: 'Не удалось загрузить аватар' });
+  }
+});
 
 module.exports = router;
