@@ -32,8 +32,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/skills', skillsRouter);
-app.use('/api', miscRouter);
-
+app.use('/api/departments', miscRouter);
+app.use('/api/directions', miscRouter);
 
 
 
