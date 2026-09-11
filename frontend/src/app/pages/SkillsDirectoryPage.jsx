@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   loadSkills,
   saveSkills,
@@ -34,6 +35,20 @@ export default function SkillsDirectoryPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Если пришли с главной с параметром ?new=1 — сразу открываем форму создания
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      startCreating();
+
+      // Убираем параметр из адреса, чтобы модалка не открывалась при обновлении
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("new");
+      setSearchParams(nextParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, setSearchParams]);
 
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },

@@ -3248,3 +3248,63 @@ h3 {
 .mini-user-link:hover .mini-user-name {
   color: var(--text);
 }
+
+/* ===== Meeting details modal ===== */
+
+.modal-wide {
+  width: min(640px, 92vw);
+}
+
+.meeting-details {
+  display: grid;
+  gap: 16px;
+}
+
+.meeting-details-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.meeting-details-subtitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.meeting-summary {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.meeting-summary-muted {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* ===== Delete meeting ===== */
+
+.meeting-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.button.org-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

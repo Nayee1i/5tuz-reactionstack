@@ -1,59 +1,33 @@
 import { useEffect, useState } from "react";
-import { useApi } from "../../shared/hooks/useApi";
 import { useSearchParams } from "react-router-dom";
+import { useApi } from "../../shared/hooks/useApi";
+import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 import {
   getUpcomingMeetings,
   getMeetingsHistory,
+  getMeetingById,
+  createMeeting,
+  deleteMeeting,
 } from "../../shared/api/meetings.api";
 
-const DEMO_NOTICE =
-  "Действие пока недоступно в демо-режиме. Эндпоинты для бэкенда уже подготовлены.";
-
 function formatDate(value) {
-  if (!value) {
-    return "—";
-  }
-
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("ru-RU", {
-    day: "numeric",
-    month: "short",
-  }).format(date);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" }).format(date);
 }
 
 function formatTime(value) {
-  if (!value) {
-    return "—";
-  }
-
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("ru-RU", {
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit" }).format(date);
 }
 
 function formatDateTime(value) {
-  if (!value) {
-    return "—";
-  }
-
+  if (!value) return "—";
   const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
+  if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("ru-RU", {
     day: "numeric",
     month: "long",
@@ -64,33 +38,25 @@ function formatDateTime(value) {
 }
 
 function getMeetingTone(meeting) {
-  if (meeting.isOngoing) {
-    return "danger";
-  }
+  if (meeting.isOngoing) return "danger";
 
   switch (meeting.status) {
     case "completed":
       return "success";
-
     case "scheduled":
       return "info";
-
     case "draft":
     case "postponed":
       return "warning";
-
     case "cancelled":
       return "danger";
-
     default:
       return "neutral";
   }
 }
 
 function getMeetingLabel(meeting) {
-  if (meeting.statusLabel) {
-    return meeting.statusLabel;
-  }
+  if (meeting.statusLabel) return meeting.statusLabel;
 
   switch (meeting.status) {
     case "ongoing":
@@ -118,7 +84,6 @@ function ErrorState({ message, onRetry }) {
   return (
     <div className="card">
       <div className="empty">{message}</div>
-
       <div className="stack">
         <button className="button secondary" type="button" onClick={onRetry}>
           Повторить
@@ -137,35 +102,149 @@ function MeetingPersons({ meeting }) {
   );
 }
 
+/* ========== Модалка с деталями встречи ========== */
+
+function MeetingDetailsModal({ meetingId, onClose }) {
+  const { data: meeting, loading, error, reload } = useApi(
+    () => getMeetingById(meetingId),
+    [meetingId],
+    { cacheKey: `meeting-${meetingId}` },
+  );
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div
+        className="modal-content modal-wide"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="modal-header">
+          <h2>{meeting ? meeting.title : "Встреча"}</h2>
+
+          <button
+            className="modal-close"
+            type="button"
+            onClick={onClose}
+            aria-label="Закрыть"
+          >
+            ×
+          </button>
+        </div>
+
+        {loading && !meeting ? (
+          <div className="empty">Загрузка встречи...</div>
+        ) : error ? (
+          <ErrorState message={error} onRetry={reload} />
+        ) : meeting ? (
+          <div className="meeting-details">
+            <div className="meeting-details-top">
+              <span className={`badge ${getMeetingTone(meeting)}`}>
+                {getMeetingLabel(meeting)}
+              </span>
+
+              <span className="meeting-meta">
+                {meeting.type} · {meeting.format || "Формат не указан"}
+              </span>
+            </div>
+
+            <div className="info-grid">
+              <div className="info-row">
+                <span className="info-label">Дата и время</span>
+                <span className="info-value">
+                  {formatDateTime(meeting.startsAt)} — {formatTime(meeting.endsAt)}
+                </span>
+              </div>
+
+              <div className="info-row">
+                <span className="info-label">Проводит</span>
+                <span className="info-value">
+                  {meeting.conductor?.fullName || "—"}
+                  {meeting.conductor?.position ? `, ${meeting.conductor.position}` : ""}
+                </span>
+              </div>
+
+              <div className="info-row">
+                <span className="info-label">Участник</span>
+                <span className="info-value">
+                  {meeting.participant?.fullName || "—"}
+                  {meeting.participant?.direction ? ` · ${meeting.participant.direction}` : ""}
+                </span>
+              </div>
+
+              {meeting.link ? (
+                <div className="info-row">
+                  <span className="info-label">Ссылка на звонок</span>
+                  <span className="info-value">{meeting.link}</span>
+                </div>
+              ) : null}
+            </div>
+
+            {meeting.status === "completed" ? (
+              <>
+                <h3 className="meeting-details-subtitle">Итоги встречи</h3>
+
+                {meeting.summary ? (
+                  <p className="meeting-summary">{meeting.summary}</p>
+                ) : (
+                  <div className="empty">Итоги не заполнены</div>
+                )}
+
+                <div className="history-stats">
+                  <span className="badge success">
+                    Зачтено скиллов: {meeting.confirmedSkillsCount}
+                  </span>
+                  <span className="badge warning">
+                    Проблем: {meeting.problemsCount}
+                  </span>
+                  <span className="badge neutral">
+                    Материалов: {meeting.attachmentsCount}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="meeting-summary-muted">
+                Итоги, зачтённые скиллы и проблемы появятся после проведения встречи.
+              </p>
+            )}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+/* ========== Страница ========== */
+
 export default function MeetingsPage() {
   const [activeTab, setActiveTab] = useState("upcoming");
   const [notice, setNotice] = useState("");
+  const [noticeTone, setNoticeTone] = useState("info");
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
+  const [selectedMeetingId, setSelectedMeetingId] = useState(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const [plannerForm, setPlannerForm] = useState({
+    date: "",
+    time: "",
+    participantId: "2",
+    type: "pr",
+    format: "online",
+  });
+  const [plannerError, setPlannerError] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
 
   const upcoming = useApi(getUpcomingMeetings, []);
+  const { reload: reloadStatus } = useMeetingsStatus();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [history, setHistory] = useState({
-    data: null,
-    loading: false,
-    error: "",
-  });
+  const [history, setHistory] = useState({ data: null, loading: false, error: "" });
 
   const loadHistory = async () => {
-    setHistory((prev) => ({
-      ...prev,
-      loading: true,
-      error: "",
-    }));
+    setHistory((prev) => ({ ...prev, loading: true, error: "" }));
 
     try {
       const data = await getMeetingsHistory(1, 10);
-
-      setHistory({
-        data,
-        loading: false,
-        error: "",
-      });
+      setHistory({ data, loading: false, error: "" });
     } catch (error) {
       setHistory({
         data: null,
@@ -176,18 +255,13 @@ export default function MeetingsPage() {
   };
 
   useEffect(() => {
-    if (activeTab !== "history") {
-      return;
-    }
-
-    if (history.data || history.loading) {
-      return;
-    }
-
+    if (activeTab !== "history") return;
+    if (history.data || history.loading) return;
     loadHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // Если пришли с главной с параметром ?new=1 — сразу открываем планировщик
+  // Открытие планировщика по ?new=1 с главной
   useEffect(() => {
     if (searchParams.get("new") === "1") {
       setIsPlannerOpen(true);
@@ -198,11 +272,22 @@ export default function MeetingsPage() {
     }
   }, [searchParams, setSearchParams]);
 
-  const showDemoNotice = (text) => {
-    setNotice(text || DEMO_NOTICE);
+  useEffect(() => {
+  if (deleteConfirmId === null) {
+    return;
+  }
+
+  const timer = setTimeout(() => setDeleteConfirmId(null), 4000);
+  return () => clearTimeout(timer);
+  }, [deleteConfirmId]);
+
+  const showNotice = (text, tone = "info") => {
+    setNotice(text);
+    setNoticeTone(tone);
   };
 
   const openPlanner = () => {
+    setPlannerError("");
     setIsPlannerOpen(true);
   };
 
@@ -210,18 +295,87 @@ export default function MeetingsPage() {
     setIsPlannerOpen(false);
   };
 
-  const handlePlannerSubmit = (event) => {
-    event.preventDefault();
-    showDemoNotice(
-      "Создание встречи пока недоступно. Эндпоинт для бэкенда: POST /api/meetings.",
-    );
-    closePlanner();
+  const handlePlannerChange = (event) => {
+    const { name, value } = event.target;
+    setPlannerForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const upcomingMeetings = Array.isArray(upcoming.data)
-    ? upcoming.data
-    : [];
+  const handlePlannerSubmit = async (event) => {
+    event.preventDefault();
+    setPlannerError("");
 
+    if (!plannerForm.date || !plannerForm.time) {
+      setPlannerError("Укажите дату и время встречи");
+      return;
+    }
+
+    const startsAt = new Date(`${plannerForm.date}T${plannerForm.time}:00`);
+
+    if (Number.isNaN(startsAt.getTime())) {
+      setPlannerError("Некорректные дата или время");
+      return;
+    }
+
+    if (startsAt.getTime() < Date.now()) {
+      setPlannerError("Нельзя запланировать встречу в прошлом");
+      return;
+    }
+
+    setIsCreating(true);
+
+    try {
+      await createMeeting({
+        participantId: Number(plannerForm.participantId),
+        type: plannerForm.type,
+        format: plannerForm.format,
+        startsAt: startsAt.toISOString(),
+        endsAt: new Date(startsAt.getTime() + 45 * 60000).toISOString(),
+      });
+
+      closePlanner();
+      showNotice("Встреча запланирована", "success");
+
+      setPlannerForm((prev) => ({ ...prev, date: "", time: "" }));
+
+      // Тихо обновляем список и бейдж в меню
+      upcoming.reload();
+      reloadStatus();
+    } catch (error) {
+      setPlannerError(error?.message || "Не удалось создать встречу");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const requestDelete = (meetingId) => {
+  setDeleteConfirmId((prev) => (prev === meetingId ? null : meetingId));
+};
+
+const handleDeleteMeeting = async (meetingId) => {
+  setIsDeleting(true);
+
+  try {
+    await deleteMeeting(meetingId);
+
+    showNotice("Встреча удалена", "success");
+    setDeleteConfirmId(null);
+
+    if (selectedMeetingId === meetingId) {
+      setSelectedMeetingId(null);
+    }
+
+    // Тихо обновляем список и бейдж в меню
+    upcoming.reload();
+    reloadStatus();
+  } catch (error) {
+    showNotice(error?.message || "Не удалось удалить встречу", "error");
+    setDeleteConfirmId(null);
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
+  const upcomingMeetings = Array.isArray(upcoming.data) ? upcoming.data : [];
   const historyItems = history.data?.items ?? [];
 
   return (
@@ -236,8 +390,12 @@ export default function MeetingsPage() {
       </header>
 
       {notice ? (
-        <div className="card">
-          <div className="empty">{notice}</div>
+        <div
+          className={`org-alert ${
+            noticeTone === "success" ? "org-alert-success" : "org-alert-error"
+          }`}
+        >
+          {notice}
         </div>
       ) : null}
 
@@ -270,19 +428,15 @@ export default function MeetingsPage() {
                   <span className="badge neutral">{upcomingMeetings.length}</span>
                 ) : null}
 
-                <button
-                  className="button primary"
-                  type="button"
-                  onClick={openPlanner}
-                >
+                <button className="button primary" type="button" onClick={openPlanner}>
                   Запланировать встречу
                 </button>
               </div>
             </div>
 
-            {upcoming.loading ? (
+            {!upcoming.data && upcoming.loading ? (
               <EmptyState>Загрузка встреч...</EmptyState>
-            ) : upcoming.error ? (
+            ) : upcoming.error && !upcoming.data ? (
               <ErrorState message={upcoming.error} onRetry={upcoming.reload} />
             ) : upcomingMeetings.length === 0 ? (
               <EmptyState>Встречи пока не запланированы</EmptyState>
@@ -315,31 +469,35 @@ export default function MeetingsPage() {
                     </div>
 
                     <div className="meeting-actions">
-                      {meeting.isOngoing ? (
-                        <button
-                          className="button primary"
-                          type="button"
-                          onClick={() =>
-                            showDemoNotice(
-                              "Вход во встречу пока недоступен в демо-режиме. Позже здесь будет открытие протокола или ссылки на звонок.",
-                            )
-                          }
-                        >
-                          Войти
-                        </button>
-                      ) : (
-                        <button
-                          className="button secondary"
-                          type="button"
-                          onClick={() =>
-                            showDemoNotice(
-                              "Открытие карточки встречи пока недоступно в демо-режиме. Позже здесь будет протокол встречи.",
-                            )
-                          }
-                        >
-                          Открыть
-                        </button>
-                      )}
+                      <button
+                        className={meeting.isOngoing ? "button primary" : "button secondary"}
+                        type="button"
+                        onClick={() => setSelectedMeetingId(meeting.id)}
+                      >
+                        {meeting.isOngoing ? "Войти" : "Открыть"}
+                      </button>
+
+                      {meeting.status === "scheduled" || meeting.status === "draft" ? (
+                        deleteConfirmId === meeting.id ? (
+                          <button
+                            className="button org-delete"
+                            type="button"
+                            disabled={isDeleting}
+                            onClick={() => handleDeleteMeeting(meeting.id)}
+                          >
+                            {isDeleting ? "Удаление..." : "Точно?"}
+                          </button>
+                        ) : (
+                          <button
+                            className="button secondary"
+                            type="button"
+                            onClick={() => requestDelete(meeting.id)}
+                            title="Удалить встречу"
+                          >
+                            Удалить
+                          </button>
+                        )
+                      ) : null}
                     </div>
                   </article>
                 ))}
@@ -360,16 +518,21 @@ export default function MeetingsPage() {
               ) : null}
             </div>
 
-            {history.loading ? (
+            {!history.data && history.loading ? (
               <EmptyState>Загрузка истории...</EmptyState>
-            ) : history.error ? (
+            ) : history.error && !history.data ? (
               <ErrorState message={history.error} onRetry={loadHistory} />
             ) : historyItems.length === 0 ? (
               <EmptyState>История встреч пока пуста</EmptyState>
             ) : (
               <div className="history-list">
                 {historyItems.map((meeting, index) => (
-                  <article className="history-item" key={meeting.id || index}>
+                  <article
+                    className="history-item"
+                    key={meeting.id || index}
+                    onClick={() => setSelectedMeetingId(meeting.id)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <div className="history-top">
                       <div>
                         <h3>{meeting.title}</h3>
@@ -378,9 +541,7 @@ export default function MeetingsPage() {
                         </div>
                       </div>
 
-                      <span className="badge success">
-                        {getMeetingLabel(meeting)}
-                      </span>
+                      <span className="badge success">{getMeetingLabel(meeting)}</span>
                     </div>
 
                     <MeetingPersons meeting={meeting} />
@@ -393,11 +554,9 @@ export default function MeetingsPage() {
                       <span className="badge success">
                         Зачтено скиллов: {meeting.confirmedSkillsCount}
                       </span>
-
                       <span className="badge warning">
                         Проблем: {meeting.problemsCount}
                       </span>
-
                       <span className="badge neutral">
                         Материалов: {meeting.attachmentsCount}
                       </span>
@@ -410,6 +569,7 @@ export default function MeetingsPage() {
         </div>
       ) : null}
 
+      {/* ===== Планировщик ===== */}
       {isPlannerOpen ? (
         <div className="modal-overlay" onClick={closePlanner}>
           <div
@@ -430,34 +590,77 @@ export default function MeetingsPage() {
             </div>
 
             <form className="planner-form" onSubmit={handlePlannerSubmit}>
+              {plannerError ? (
+                <div className="org-alert org-alert-error">{plannerError}</div>
+              ) : null}
+
               <div className="planner-grid">
                 <div className="field">
                   <label htmlFor="meeting-date">Дата</label>
-                  <input id="meeting-date" type="date" />
+                  <input
+                    id="meeting-date"
+                    name="date"
+                    type="date"
+                    value={plannerForm.date}
+                    onChange={handlePlannerChange}
+                    required
+                  />
                 </div>
 
                 <div className="field">
                   <label htmlFor="meeting-time">Время</label>
-                  <input id="meeting-time" type="time" />
+                  <input
+                    id="meeting-time"
+                    name="time"
+                    type="time"
+                    value={plannerForm.time}
+                    onChange={handlePlannerChange}
+                    required
+                  />
                 </div>
               </div>
 
               <div className="field">
                 <label htmlFor="meeting-participant">Сотрудник</label>
-                <select id="meeting-participant" defaultValue="maria">
-                  <option value="maria">Мария Соколова</option>
-                  <option value="ivan">Иван Петров</option>
-                  <option value="alexey">Алексей Ковалёв</option>
+                <select
+                  id="meeting-participant"
+                  name="participantId"
+                  value={plannerForm.participantId}
+                  onChange={handlePlannerChange}
+                >
+                  <option value="2">Мария Соколова</option>
+                  <option value="3">Иван Петров</option>
+                  <option value="1">Алексей Ковалёв</option>
                 </select>
               </div>
 
-              <div className="field">
-                <label htmlFor="meeting-type">Тип встречи</label>
-                <select id="meeting-type" defaultValue="pr">
-                  <option value="pr">PR 1:1</option>
-                  <option value="skill-review">Skill Review</option>
-                  <option value="problem-review">Problem Review</option>
-                </select>
+              <div className="planner-grid">
+                <div className="field">
+                  <label htmlFor="meeting-type">Тип встречи</label>
+                  <select
+                    id="meeting-type"
+                    name="type"
+                    value={plannerForm.type}
+                    onChange={handlePlannerChange}
+                  >
+                    <option value="pr">PR 1:1</option>
+                    <option value="skill-review">Skill Review</option>
+                    <option value="problem-review">Problem Review</option>
+                  </select>
+                </div>
+
+                <div className="field">
+                  <label htmlFor="meeting-format">Формат</label>
+                  <select
+                    id="meeting-format"
+                    name="format"
+                    value={plannerForm.format}
+                    onChange={handlePlannerChange}
+                  >
+                    <option value="online">Онлайн</option>
+                    <option value="office">Офис</option>
+                  </select>
+                </div>
               </div>
 
               <div className="modal-actions">
@@ -465,17 +668,26 @@ export default function MeetingsPage() {
                   className="button secondary"
                   type="button"
                   onClick={closePlanner}
+                  disabled={isCreating}
                 >
                   Отмена
                 </button>
 
-                <button className="button primary" type="submit">
-                  Создать встречу
+                <button className="button primary" type="submit" disabled={isCreating}>
+                  {isCreating ? "Создание..." : "Создать встречу"}
                 </button>
               </div>
             </form>
           </div>
         </div>
+      ) : null}
+
+      {/* ===== Детали встречи ===== */}
+      {selectedMeetingId !== null ? (
+        <MeetingDetailsModal
+          meetingId={selectedMeetingId}
+          onClose={() => setSelectedMeetingId(null)}
+        />
       ) : null}
     </section>
   );
