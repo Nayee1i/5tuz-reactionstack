@@ -150,7 +150,7 @@ export default function LoginPage() {
       <div className="auth-panel">
         <div className="auth-card" ref={cardRef}>
           <header className="auth-header">
-            <div className="auth-logo">PR</div>
+            <div className="auth-logo">SF</div>
             <h1 className="auth-title">Вход в SkillFlow</h1>
             <p className="auth-subtitle">
               Система мониторинга развития технических навыков
