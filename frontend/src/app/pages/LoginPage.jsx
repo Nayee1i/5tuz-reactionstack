@@ -1,32 +1,105 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const cardRef = useRef(null);
+  const canvasRef = useRef(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
 
   const [values, setValues] = useState({ login: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // === ЛОГИКА АНИМАЦИИ ФОНА (СЕТКА ТОЧЕК) ===
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    let animationFrameId;
+    let dots = [];
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initDots();
+    };
+
+    const initDots = () => {
+      dots = [];
+      const spacing = 40; // Расстояние между точками
+      for (let x = 0; x < canvas.width; x += spacing) {
+        for (let y = 0; y < canvas.height; y += spacing) {
+          dots.push({ x, y, baseSize: 1.2 });
+        }
+      }
+    };
+
+    const handleMouseMove = (e) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
+    };
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Цвет обычных точек (очень бледный)
+      ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+
+      dots.forEach((dot) => {
+        const dx = mouseRef.current.x - dot.x;
+        const dy = mouseRef.current.y - dot.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxDist = 120; // Радиус реакции на курсор
+
+        let size = dot.baseSize;
+        
+        // Слабая реакция: если курсор рядом, точка чуть растет и появляется линия
+        if (distance < maxDist) {
+          size = dot.baseSize + (1 - distance / maxDist) * 1.5;
+          
+          // Рисуем очень бледную линию к курсору (фирменный фиолетовый)
+          ctx.beginPath();
+          ctx.moveTo(dot.x, dot.y);
+          ctx.lineTo(mouseRef.current.x, mouseRef.current.y);
+          ctx.strokeStyle = `rgba(94, 106, 210, ${0.15 * (1 - distance / maxDist)})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("mousemove", handleMouseMove);
+    
+    resize();
+    animate();
+
+    // Очистка при размонтировании компонента
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
     setValues((prev) => ({ ...prev, [name]: value }));
-    if (error) setError(""); // Убираем ошибку, как только пользователь начал печатать
+    if (error) setError("");
   };
 
-    const handleSubmit = async (event) => {
-    console.log("1. Функция handleSubmit вызвана");
-    
-    // Если этой строки нет в консоли, значит событие не перехватывается!
-    event.preventDefault(); 
-    console.log("2. event.preventDefault() отработал");
-    
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setError("");
 
     if (!values.login.trim() || !values.password.trim()) {
-      console.log("3. Ошибка валидации: пустые поля");
       setError("Введите логин и пароль");
       cardRef.current?.classList.add("shake");
       setTimeout(() => cardRef.current?.classList.remove("shake"), 400);
@@ -34,7 +107,6 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    console.log("4. Началась имитация запроса");
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 700));
@@ -44,7 +116,7 @@ export default function LoginPage() {
         firstName: values.login,
         lastName: "",
         fullName: values.login,
-        email: `${values.login}@skillflow.local`, // Добавлены обратные кавычки ` `
+        email: `${values.login}@skillflow.local`,
         role: values.login.toLowerCase() === "admin" ? "admin" : "user",
         position: values.login.toLowerCase() === "admin" ? "Team Lead" : "Frontend Developer",
         direction: "BACK",
@@ -53,11 +125,8 @@ export default function LoginPage() {
 
       localStorage.setItem("token", "fake-demo-token");
       localStorage.setItem("user", JSON.stringify(fakeUser));
-      console.log("5. Данные сохранены в localStorage, выполняем navigate...");
 
       navigate("/app", { replace: true });
-      console.log("6. navigate вызван");
-      
     } catch (err) {
       console.error("Ошибка в try/catch:", err);
       setError("Не удалось войти. Попробуйте ещё раз.");
@@ -68,7 +137,15 @@ export default function LoginPage() {
 
   return (
     <section className="auth-page">
+      {/* 1. Старое свечение (для глубины фона) */}
       <div className="auth-glow" aria-hidden="true" />
+      
+      {/* 2. Наш новый Canvas с точками */}
+      <canvas 
+        ref={canvasRef} 
+        className="auth-network-bg" 
+        aria-hidden="true" 
+      />
 
       <div className="auth-panel">
         <div className="auth-card" ref={cardRef}>
@@ -94,7 +171,8 @@ export default function LoginPage() {
                 required
               />
             </div>
-<div className="field">
+
+            <div className="field">
               <label htmlFor="password">Пароль</label>
               <div className="password-control">
                 <input
@@ -146,9 +224,63 @@ export default function LoginPage() {
         </div>
       </div>
       
-      {/* Добавляем ключевой кадр для спиннера, если его нет в основном CSS */}
+      {/* 3. Исправленные и надежные стили */}
       <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        /* Анимация спиннера */
+        @keyframes spin { 
+          from { transform: rotate(0deg); } 
+          to { transform: rotate(360deg); } 
+        }
+
+        /* Позиционирование canvas ПОД карточкой, но НАД общим фоном */
+        .auth-network-bg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 0; 
+          pointer-events: none; /* Чтобы клики проходили сквозь canvas к полям ввода */
+        }
+
+        .auth-panel {
+          position: relative;
+          z-index: 1; /* Карточка всегда поверх canvas */
+        }
+
+        /* === ЖЕСТКАЯ ФИКСАЦИЯ ЦВЕТА ПОЛЕЙ ВВОДА === */
+        
+        /* Запрещаем изменение фона при фокусе */
+        .auth-card .field input:focus {
+          background-color: #08090a !important; /* Цвет var(--bg) */
+        }
+
+        /* МАГИЯ: Перебиваем стандартный белый/желтый фон автозаполнения Chrome/Safari */
+        .auth-card .field input:-webkit-autofill,
+        .auth-card .field input:-webkit-autofill:hover,
+        .auth-card .field input:-webkit-autofill:focus,
+        .auth-card .field input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 30px #08090a inset !important; /* "Закрашиваем" фон браузера */
+          -webkit-text-fill-color: #f7f8f8 !important; /* Цвет текста var(--text) */
+          caret-color: #f7f8f8 !important; /* Цвет курсора */
+          transition: background-color 5000s ease-in-out 0s; /* Бесконечная задержка перехода фона */
+        }
+
+        /* Дополнительно фиксируем цвет при валидации браузером */
+        .auth-card .field input:valid,
+        .auth-card .field input:invalid {
+          background-color: #08090a !important;
+        }
+
+        /* Анимация тряски при ошибке */
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20%, 60% { transform: translateX(-6px); }
+          40%, 80% { transform: translateX(6px); }
+        }
+        .auth-card.shake {
+          animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
       `}</style>
     </section>
   );
