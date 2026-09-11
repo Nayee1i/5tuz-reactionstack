@@ -241,6 +241,7 @@ function DashboardSkeleton() {
 }
 
 // Компонент модального окна для добавления проблемы
+// Компонент модального окна для добавления проблемы (в стиле "Запланировать встречу")
 function AddProblemModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     title: "",
@@ -269,7 +270,6 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Затемнение фона */}
           <motion.div
             className="modal-overlay"
             initial={{ opacity: 0 }}
@@ -289,7 +289,6 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
               justifyContent: "center",
             }}
           >
-            {/* Модальное окно */}
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -300,12 +299,11 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                 borderRadius: "12px",
                 padding: "24px",
                 width: "100%",
-                maxWidth: "500px",
-                maxHeight: "90vh",
-                overflowY: "auto",
+                maxWidth: "520px",
                 boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
               }}
             >
+              {/* Заголовок */}
               <div
                 style={{
                   display: "flex",
@@ -314,7 +312,7 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   marginBottom: "24px",
                 }}
               >
-                <h2 style={{ margin: 0, fontSize: "20px", color: "white" }}>
+                <h2 style={{ margin: 0, fontSize: "20px", color: "white", fontWeight: "600" }}>
                   Добавить проблему
                 </h2>
                 <button
@@ -335,7 +333,8 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
               </div>
 
               <form onSubmit={handleSubmit}>
-                <div style={{ marginBottom: "16px" }}>
+                {/* Поле: Название */}
+                <div style={{ marginBottom: "20px" }}>
                   <label
                     style={{
                       display: "block",
@@ -368,7 +367,8 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   />
                 </div>
 
-                <div style={{ marginBottom: "16px" }}>
+                {/* Поле: Описание */}
+                <div style={{ marginBottom: "20px" }}>
                   <label
                     style={{
                       display: "block",
@@ -402,71 +402,82 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   />
                 </div>
 
-                <div style={{ marginBottom: "16px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      color: "#d1d5db",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Владелец *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.owner}
-                    onChange={(e) =>
-                      setFormData({ ...formData, owner: e.target.value })
-                    }
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      background: "#374151",
-                      border: "1px solid #4b5563",
-                      borderRadius: "6px",
-                      color: "white",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
-                    placeholder="Например: Иван Петров"
-                  />
+                {/* Две колонки: Владелец и Срок решения */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "16px",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "8px",
+                        color: "#d1d5db",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Владелец *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.owner}
+                      onChange={(e) =>
+                        setFormData({ ...formData, owner: e.target.value })
+                      }
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: "#374151",
+                        border: "1px solid #4b5563",
+                        borderRadius: "6px",
+                        color: "white",
+                        fontSize: "14px",
+                        boxSizing: "border-box",
+                      }}
+                      placeholder="Например: Иван Петров"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: "block",
+                        marginBottom: "8px",
+                        color: "#d1d5db",
+                        fontSize: "14px",
+                        fontWeight: "500",
+                      }}
+                    >
+                      Срок решения *
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.dueDate}
+                      onChange={(e) =>
+                        setFormData({ ...formData, dueDate: e.target.value })
+                      }
+                      required
+                      style={{
+                        width: "100%",
+                        padding: "10px 12px",
+                        background: "#374151",
+                        border: "1px solid #4b5563",
+                        borderRadius: "6px",
+                        color: "white",
+                        fontSize: "14px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: "16px" }}>
-                  <label
-                    style={{
-                      display: "block",
-                      marginBottom: "8px",
-                      color: "#d1d5db",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                    }}
-                  >
-                    Срок решения *
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.dueDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dueDate: e.target.value })
-                    }
-                    required
-                    style={{
-                      width: "100%",
-                      padding: "10px 12px",
-                      background: "#374151",
-                      border: "1px solid #4b5563",
-                      borderRadius: "6px",
-                      color: "white",
-                      fontSize: "14px",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                </div>
-
+                {/* Уровень важности */}
                 <div style={{ marginBottom: "24px" }}>
                   <label
                     style={{
@@ -479,7 +490,13 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   >
                     Уровень важности *
                   </label>
-                  <div style={{ display: "flex", gap: "12px" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: "12px",
+                    }}
+                  >
                     {[
                       { value: "low", label: "Низкий", color: "#3b82f6" },
                       { value: "medium", label: "Средний", color: "#f59e0b" },
@@ -492,7 +509,6 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                           setFormData({ ...formData, severity: item.value })
                         }
                         style={{
-                          flex: 1,
                           padding: "10px 16px",
                           background:
                             formData.severity === item.value
@@ -502,7 +518,7 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                           borderRadius: "6px",
                           color: "white",
                           fontSize: "14px",
-                          fontWeight: formData.severity === item.value ? "600" : "400",
+                          fontWeight: formData.severity === item.value ? "600" : "500",
                           cursor: "pointer",
                           transition: "all 0.2s",
                         }}
@@ -513,13 +529,19 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   </div>
                 </div>
 
-                <div style={{ display: "flex", gap: "12px" }}>
+                {/* Кнопки */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "12px",
+                    justifyContent: "flex-end",
+                  }}
+                >
                   <button
                     type="button"
                     onClick={onClose}
                     style={{
-                      flex: 1,
-                      padding: "10px 16px",
+                      padding: "10px 20px",
                       background: "#374151",
                       border: "1px solid #4b5563",
                       borderRadius: "6px",
@@ -534,8 +556,7 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   <button
                     type="submit"
                     style={{
-                      flex: 1,
-                      padding: "10px 16px",
+                      padding: "10px 20px",
                       background: "#3b82f6",
                       border: "none",
                       borderRadius: "6px",
@@ -800,20 +821,27 @@ export default function HomePage() {
                   style={{
                     position: "relative",
                     transition: "background 0.2s",
+                    paddingRight: hoveredProblemId === problem.id ? "52px" : "0",
                   }}
                 >
-                  <div style={{ paddingRight: hoveredProblemId === problem.id ? "40px" : "0" }}>
+                  <div>
                     <div className="item-title">{problem.title}</div>
                     <div className="item-meta">
                       {problem.owner} · до {formatDate(problem.dueDate)}
                     </div>
                   </div>
 
-                  <span className={`badge ${getProblemTone(problem)}`}>
+                  <span 
+                    className={`badge ${getProblemTone(problem)}`}
+                    style={{
+                      transition: "opacity 0.2s",
+                      opacity: hoveredProblemId === problem.id ? 0 : 1,
+                    }}
+                  >
                     {getProblemLabel(problem)}
                   </span>
 
-                  {/* 🔴 Кнопка удаления (появляется при наведении) */}
+                  {/* Кнопка удаления (появляется при наведении) */}
                   {hoveredProblemId === problem.id && (
                     <button
                       type="button"
@@ -825,26 +853,26 @@ export default function HomePage() {
                         transform: "translateY(-50%)",
                         background: "#ef4444",
                         border: "none",
-                        borderRadius: "4px",
+                        borderRadius: "6px",
                         color: "white",
-                        width: "28px",
-                        height: "28px",
+                        width: "32px",
+                        height: "32px",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         cursor: "pointer",
-                        fontSize: "18px",
+                        fontSize: "20px",
                         lineHeight: 1,
                         transition: "all 0.2s",
-                        opacity: 0.9,
+                        boxShadow: "0 2px 8px rgba(239, 68, 68, 0.4)",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.opacity = "1";
                         e.currentTarget.style.background = "#dc2626";
+                        e.currentTarget.style.transform = "translateY(-50%) scale(1.05)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.opacity = "0.9";
                         e.currentTarget.style.background = "#ef4444";
+                        e.currentTarget.style.transform = "translateY(-50%) scale(1)";
                       }}
                       title="Удалить проблему"
                     >
