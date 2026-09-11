@@ -8,6 +8,8 @@ const usersRoutes = require('./api/user'); // <-- ДОБАВИТЬ
 const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
 const path = require('path');
 const miscRouter = require('./api/misc'); // <-- ДОБАВИТЬ ЭТО
+const skillsRouter = require('./src/api/skills');
+
 
 
 const app = express();
@@ -30,6 +32,9 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api', miscRouter);
+app.use('/api/skills', skillsRouter);
+
+
 
 app.get('/api/users', (req, res) => {
   res.json({ users: [] });
