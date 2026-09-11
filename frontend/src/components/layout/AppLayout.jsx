@@ -10,7 +10,6 @@ const mainNavigation = [
   { to: "/app/directories/skills", label: "Справочник скиллов" },
 ];
 
-// Моковые данные уведомлений
 const mockNotifications = [
   {
     id: 1,
@@ -58,10 +57,8 @@ export default function AppLayout() {
       ? meetingsStatus.upcomingCount
       : null;
 
-  // Подсчёт непрочитанных уведомлений
   const unreadCount = mockNotifications.filter((n) => !n.read).length;
 
-  // Закрытие dropdown при клике вне его
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -128,13 +125,27 @@ export default function AppLayout() {
       <div className={`workspace ${hasLiveMeeting ? "has-live-banner" : ""}`}>
         <header className="topbar">
           <div className="topbar-actions">
-            {/* Dropdown уведомлений */}
-            <div className="notifications-dropdown" ref={notificationsRef}>
+            {/* Dropdown уведомлений - должен быть СПРАВА */}
+            <div 
+              className="notifications-dropdown" 
+              ref={notificationsRef}
+              style={{ position: "relative", marginLeft: "auto" }}
+            >
               <button
                 className="button secondary"
                 type="button"
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                style={{ position: "relative" }}
+                style={{ 
+                  position: "relative",
+                  background: "#374151",
+                  color: "white",
+                  border: "1px solid #4b5563",
+                  padding: "8px 16px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: "500"
+                }}
               >
                 Уведомления
                 {unreadCount > 0 && (
@@ -177,12 +188,15 @@ export default function AppLayout() {
                     zIndex: 1000,
                   }}
                 >
+                  {/* Заголовок с ЧИТАЕМЫМ текстом (тёмный на светлом) */}
                   <div
                     style={{
                       padding: "16px",
                       borderBottom: "1px solid #e5e7eb",
                       fontWeight: "600",
                       fontSize: "16px",
+                      color: "#111827", // тёмный текст
+                      background: "#f9fafb", // светлый фон
                     }}
                   >
                     Уведомления ({unreadCount} непрочитанных)
@@ -257,6 +271,7 @@ export default function AppLayout() {
                       padding: "12px 16px",
                       textAlign: "center",
                       borderTop: "1px solid #e5e7eb",
+                      background: "#f9fafb",
                     }}
                   >
                     <button
