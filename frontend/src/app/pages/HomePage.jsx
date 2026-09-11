@@ -561,10 +561,20 @@ export default function HomePage() {
   const [isStatsOpen, setIsStatsOpen] = useState(true);
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   
+
+  const [problems, setProblems] = useState([]);
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
   const ongoingMeeting = meetingsStatus?.ongoing;
+
+
+  useEffect(() => {
+    if (data && Array.isArray(data.problems)) {
+      setProblems(data.problems);
+    }
+  }, [data]);
+
 
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
