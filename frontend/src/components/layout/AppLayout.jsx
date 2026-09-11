@@ -142,6 +142,7 @@ export default function AppLayout() {
 
       <div className={`workspace ${hasLiveMeeting ? "has-live-banner" : ""}`}>
         <header className="topbar" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "12px 24px" }}>
+          {/* 🔴 Кнопка Уведомления — СПРАВА */}
           <div 
             className="notifications-dropdown" 
             ref={notificationsRef}
