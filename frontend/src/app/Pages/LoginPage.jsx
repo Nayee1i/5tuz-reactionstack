@@ -129,6 +129,7 @@ export default function LoginPage() {
               className="button primary auth-submit"
               type="submit"
               disabled={isLoading}
+              onClick={() => console.log("Login button pressed")}
             >
               {isLoading ? (
                 <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
