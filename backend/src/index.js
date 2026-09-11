@@ -1,29 +1,33 @@
 // backend/src/index.js
-// import meetingsRouter from './api/routes/meetings.js';
-
-
 const express = require('express');
 const cors = require('cors');
-const usersRoutes = require('./api/user'); // <-- ДОБАВИТЬ
-const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
+const usersRoutes = require('./api/user');
+const authRoutes = require('./routes/auth');
 const path = require('path');
-const miscRouter = require('./api/misc'); // <-- ДОБАВИТЬ ЭТО
+const miscRouter = require('./api/misc'); 
 const skillsRouter = require('./api/skills');
 
+const directionsRouter = require('./api/directions'); 
+const departmentsRouter = require('./api/departments'); 
 
+// 1. Импортируем роутеры
+const authRoutes = require('./routes/auth');
+const usersRoutes = require('./routes/users'); // <-- Подключаем реальный роутер пользователей
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({
-  origin: '*', 
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json());
-// app.use('/api/meetings', meetingsRouter);
-app.use('/avatars', express.static(path.join(__dirname, '..', 'uploads', 'avatars')))
 
+// Раздача аватарок (если нужно)
+app.use('/avatars', express.static(path.join(__dirname, '..', 'uploads', 'avatars')));
+
+// 2. Подключаем роутеры (ПОРЯДОК ВАЖЕН!)
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes); // <-- Теперь запросы пойдут сюда, а не в заглушку
+
+// Проверка работоспособности
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running!' });
 });
@@ -32,8 +36,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/skills', skillsRouter);
-app.use('/api/departments', miscRouter);
-app.use('/api/directions', miscRouter);
+app.use('/api/directions', directionsRouter);   // <-- Подключаем направления
+app.use('/api/departments', departmentsRouter); // <-- Подключаем подразделения
 
 
 
@@ -42,5 +46,5 @@ app.get('/api/users', (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend running on port ${PORT}`);
+  console.log(`✅ Backend running on port ${PORT}`);
 });
