@@ -165,7 +165,7 @@ export default function AppLayout() {
       <aside className="sidebar">
               <div className="brand">
         <div className="brand-info">
-          <span className="brand-logo">PR</span>
+          <span className="brand-logo">SF</span>
           <span className="brand-name">SkillFlow</span>
         </div>
 
