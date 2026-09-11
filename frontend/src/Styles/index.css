@@ -2,33 +2,33 @@
 /* Design tokens (Linear-style)  */
 /* ============================= */
 :root {
-  --bg: #f7f8fa;
-  --bg-elev-1: #ffffff;
-  --bg-elev-2: #f1f2f4;
-  --bg-hover: rgba(0, 0, 0, 0.04);
+  --bg: #08090a;
+  --bg-elev-1: #0f1011;
+  --bg-elev-2: #16171a;
+  --bg-hover: rgba(255, 255, 255, 0.04);
 
-  --border: rgba(0, 0, 0, 0.08);
-  --border-strong: rgba(0, 0, 0, 0.14);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
 
-  --text: #1f2329;
-  --text-secondary: #6b7280;
-  --text-tertiary: #9ca3af;
+  --text: #f7f8f8;
+  --text-secondary: #8a8f98;
+  --text-tertiary: #62666d;
 
   --accent: #5e6ad2;
-  --accent-hover: #4f5bc4;
-  --accent-subtle: rgba(94, 106, 210, 0.10);
+  --accent-hover: #6e79e0;
+  --accent-subtle: rgba(94, 106, 210, 0.16);
 
-  --success: #2e9b68;
-  --warning: #d9822b;
-  --danger: #d64545;
-  --info: #4285d4;
+  --success: #4cb782;
+  --warning: #f2994a;
+  --danger: #eb5757;
+  --info: #79b8ff;
 
   --radius-sm: 4px;
   --radius: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
 
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 
   --container: 1280px;
 }
@@ -2551,29 +2551,29 @@ h3 {
   color: var(--danger);
 }
 
-html[data-theme="dark"] {
-  --bg: #08090a;
-  --bg-elev-1: #0f1011;
-  --bg-elev-2: #16171a;
-  --bg-hover: rgba(255, 255, 255, 0.04);
+html[data-theme="light"] {
+  --bg: #f7f8fa;
+  --bg-elev-1: #ffffff;
+  --bg-elev-2: #f1f2f4;
+  --bg-hover: rgba(0, 0, 0, 0.04);
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
 
-  --text: #f7f8f8;
-  --text-secondary: #8a8f98;
-  --text-tertiary: #62666d;
+  --text: #1f2329;
+  --text-secondary: #6b7280;
+  --text-tertiary: #9ca3af;
 
   --accent: #5e6ad2;
-  --accent-hover: #6e79e0;
-  --accent-subtle: rgba(94, 106, 210, 0.16);
+  --accent-hover: #4f5bc4;
+  --accent-subtle: rgba(94, 106, 210, 0.10);
 
-  --success: #4cb782;
-  --warning: #f2994a;
-  --danger: #eb5757;
-  --info: #79b8ff;
+  --success: #2e9b68;
+  --warning: #d9822b;
+  --danger: #d64545;
+  --info: #4285d4;
 
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .theme-toggle {

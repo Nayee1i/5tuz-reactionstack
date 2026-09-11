@@ -111,7 +111,7 @@ export default function AppLayout() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications); // 🔴 Состояние для уведомлений
   const [theme, setTheme] = useState(() => {
-  return localStorage.getItem("theme") || "light";
+  return localStorage.getItem("theme") || "dark";
   });
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
