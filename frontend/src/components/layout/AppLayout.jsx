@@ -2,12 +2,72 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 
+const Icons = {
+  home: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 10.5L12 3l9 7.5" />
+      <path d="M5 9.5V21h14V9.5" />
+      <path d="M9 21v-6h6v6" />
+    </svg>
+  ),
+
+  meetings: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M16 3v4M8 3v4M3 10h18" />
+    </svg>
+  ),
+
+  departments: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
+      <path d="M17 9h2a2 2 0 0 1 2 2v10" />
+      <path d="M7 7h4M7 11h4M7 15h4" />
+    </svg>
+  ),
+
+  admin: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V20h-2.6v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H5.8v-2.6h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V5h2.6v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v2.6h-.1a1.7 1.7 0 0 0-1.6 1Z" />
+    </svg>
+  ),
+
+  skills: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3l2.4 4.9L20 8.7l-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8L12 3Z" />
+    </svg>
+  ),
+};
+
+
 const mainNavigation = [
-  { to: "/app", label: "Главная", end: true },
-  { to: "/app/meetings", label: "Встречи" },
-  { to: "/app/departments", label: "Подразделения" },
-  { to: "/app/admin/users", label: "Администрирование" },
-  { to: "/app/directories/skills", label: "Справочник скиллов" },
+  {
+    to: "/app",
+    label: "Главная",
+    end: true,
+    icon: Icons.home,
+  },
+  {
+    to: "/app/meetings",
+    label: "Встречи",
+    icon: Icons.meetings,
+  },
+  {
+    to: "/app/departments",
+    label: "Подразделения",
+    icon: Icons.departments,
+  },
+  {
+    to: "/app/admin/users",
+    label: "Администрирование",
+    icon: Icons.admin,
+  },
+  {
+    to: "/app/directories/skills",
+    label: "Справочник скиллов",
+    icon: Icons.skills,
+  },
 ];
 
 // 🔴 Теперь это состояние, а не константа
@@ -101,7 +161,7 @@ export default function AppLayout() {
 
         <nav className="nav" aria-label="Основная навигация">
           {mainNavigation.map((item) => (
-            <NavLink
+                        <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
@@ -109,7 +169,10 @@ export default function AppLayout() {
                 `nav-link ${isActive ? "active" : ""}`.trim()
               }
             >
-              <span>{item.label}</span>
+              <span className="nav-link-content">
+                <span className="nav-icon">{item.icon}</span>
+                <span>{item.label}</span>
+              </span>
 
               {item.to === "/app/meetings" && meetingsBadge ? (
                 <span
