@@ -31,8 +31,9 @@ app.get('/api/health', (req, res) => {
 // Подключаем авторизацию <-- ДОБАВИТЬ
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api', miscRouter);
 app.use('/api/skills', skillsRouter);
+app.use('/api', miscRouter);
+
 
 
 
