@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL = "http://localhost:3001/api"; // Укажите ваш порт
+const API_URL = "http://159.194.230.135:3001/api"; // Укажите ваш порт
 
 function emptyForm(departmentId = "") {
   return {
