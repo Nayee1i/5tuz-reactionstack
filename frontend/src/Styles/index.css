@@ -177,7 +177,7 @@ h3 {
 
 .nav-link.active {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-hover);
 }
 
 .sidebar-footer {
@@ -338,8 +338,9 @@ h3 {
   color: #fff;
 }
 
-.button.primary:hover {
-  background: var(--accent-hover);
+.button.secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
 }
 
 .button.secondary {
@@ -1429,9 +1430,8 @@ h3 {
   cursor: pointer;
 }
 
-/* ✅ FIX: скобка закрыта, .achievement-meta больше не вложен */
 .sd-modal-close:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-hover);
 }
 
 .sd-modal .sd-form {
@@ -1528,7 +1528,7 @@ h3 {
 }
 
 .sd-modal .sd-button:hover {
-  background: #1c1d20;
+  background: var(--bg-hover);
   border-color: var(--border-strong);
 }
 
