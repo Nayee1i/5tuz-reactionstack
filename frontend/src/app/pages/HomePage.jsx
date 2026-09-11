@@ -562,7 +562,6 @@ export default function HomePage() {
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   
 
-  const [problems, setProblems] = useState([]);
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
@@ -582,9 +581,14 @@ export default function HomePage() {
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
+  const [problems, setProblems] = useState(
+  Array.isArray(data?.problems) ? data.problems : []
+  );
+  
   if (!data && loading) {
     return <DashboardSkeleton />;
   } 
+
 
   if (error || !data) {
     return (
