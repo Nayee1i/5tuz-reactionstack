@@ -2648,3 +2648,37 @@ html[data-theme="light"] {
   width: 17px;
   height: 17px;
 }
+.notification-button {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 36px;
+  height: 36px;
+
+  padding: 0;
+
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+
+  color: var(--text-secondary);
+
+  cursor: pointer;
+
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.notification-button:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.notification-button svg {
+  width: 20px;
+  height: 20px;
+}

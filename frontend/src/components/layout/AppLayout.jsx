@@ -275,25 +275,10 @@ export default function AppLayout() {
             style={{ position: "relative" }}
           >
             <button
-                className="button secondary"
+                className="notification-button"
                 type="button"
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                style={{ 
-                  position: "relative",
-                  background: "#374151",
-                  color: "white",
-                  border: "1px solid #4b5563",
-                  padding: "8px 12px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: "44px",
-                  minHeight: "36px"
-                }}
               >
-                {/* SVG иконка колокольчика */}
                 <svg
                   width="20"
                   height="20"
@@ -312,17 +297,17 @@ export default function AppLayout() {
                   <span
                     style={{
                       position: "absolute",
-                      top: "-8px",
-                      right: "-8px",
+                      top: "2px",
+                      right: "2px",
                       background: "#ef4444",
                       color: "white",
                       borderRadius: "50%",
-                      width: "20px",
-                      height: "20px",
+                      width: "15px",
+                      height: "15px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: "12px",
+                      fontSize: "10px",
                       fontWeight: "bold",
                     }}
                   >
