@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../shared/hooks/useApi.js";
 import { getDashboard } from "../../shared/api/dashboard.api.js";
@@ -558,22 +558,24 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
 }
 
 export default function HomePage() {
+  // 2. ВСЕ ХУКИ ДОЛЖНЫ БЫТЬ СТРОГО В НАЧАЛЕ (до любых if и return)
   const [isStatsOpen, setIsStatsOpen] = useState(true);
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   
+  // Перенесли useState для problems наверх! Инициализируем пустым массивом
+  const [problems, setProblems] = useState([]); 
 
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
   const { data: meetingsStatus } = useMeetingsStatus();
   const ongoingMeeting = meetingsStatus?.ongoing;
 
-
+  // Теперь useEffect работает корректно, так как setProblems уже объявлен выше
   useEffect(() => {
     if (data && Array.isArray(data.problems)) {
       setProblems(data.problems);
     }
   }, [data]);
-
 
   const pageAnimation = {
     initial: { opacity: 0, y: 12 },
@@ -581,14 +583,10 @@ export default function HomePage() {
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
   };
 
-  const [problems, setProblems] = useState(
-  Array.isArray(data?.problems) ? data.problems : []
-  );
-  
+  // 3. ТЕПЕРЬ РАННИЕ ВОЗВРАТЫ БЕЗОПАСНЫ
   if (!data && loading) {
     return <DashboardSkeleton />;
   } 
-
 
   if (error || !data) {
     return (
@@ -602,26 +600,26 @@ export default function HomePage() {
   const kpis = Array.isArray(data.kpis) ? data.kpis : [];
   const skills = Array.isArray(data.skills) ? data.skills : [];
   const meetings = Array.isArray(data.meetings) ? data.meetings : [];
-
   const achievements = Array.isArray(data.achievements) ? data.achievements : [];
 
   const displayName = user.firstName || user.fullName || "пользователь";
   const subtitle = [user.direction, user.department].filter(Boolean).join(" · ");
 
-  // Обработчик добавления проблемы (пока просто лог, потом будет API)
+  // Обработчик добавления проблемы
   const handleAddProblem = (problemData) => {
-  const newProblem = {
-    id: Date.now().toString(), // временный ID
-    title: problemData.title,
-    comment: problemData.comment,
-    owner: problemData.owner,
-    dueDate: problemData.dueDate,
-    severity: problemData.severity,
-    status: "OPEN",
+    const newProblem = {
+      id: Date.now().toString(),
+      title: problemData.title,
+      comment: problemData.comment,
+      owner: problemData.owner,
+      dueDate: problemData.dueDate,
+      severity: problemData.severity,
+      status: "OPEN",
+    };
+    
+    setProblems((prev) => [...prev, newProblem]);
   };
-  
-  setProblems((prev) => [...prev, newProblem]);
-};
+
 
   return (
     <motion.section className="page" {...pageAnimation}>
