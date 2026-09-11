@@ -57,7 +57,7 @@ function normalizeDashboard(payload) {
 
 export async function getDashboard() {
   if (USE_MOCK) {
-    await delay(600);
+    await delay(100);
     return normalizeDashboard(dashboardMock);
   }
 
@@ -67,7 +67,7 @@ export async function getDashboard() {
 
 export async function getCurrentUser() {
   if (USE_MOCK) {
-    await delay(300);
+    await delay(100);
     return normalizeUser(dashboardMock.user);
   }
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useApi } from "../../shared/hooks/useApi";
+import { useSearchParams } from "react-router-dom";
 import {
   getUpcomingMeetings,
   getMeetingsHistory,
 } from "../../shared/api/meetings.api";
-import { motion } from "framer-motion";
 
 const DEMO_NOTICE =
   "Действие пока недоступно в демо-режиме. Эндпоинты для бэкенда уже подготовлены.";
@@ -143,6 +143,7 @@ export default function MeetingsPage() {
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
 
   const upcoming = useApi(getUpcomingMeetings, []);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [history, setHistory] = useState({
     data: null,
@@ -184,8 +185,18 @@ export default function MeetingsPage() {
     }
 
     loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  // Если пришли с главной с параметром ?new=1 — сразу открываем планировщик
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setIsPlannerOpen(true);
+
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("new");
+      setSearchParams(nextParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const showDemoNotice = (text) => {
     setNotice(text || DEMO_NOTICE);
@@ -213,14 +224,8 @@ export default function MeetingsPage() {
 
   const historyItems = history.data?.items ?? [];
 
-const pageAnimation = {
-    initial: { opacity: 0, y: 12 },
-    animate: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" } },
-    exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } },
-  };
-
   return (
-    <motion.section className="page" {...pageAnimation}>
+    <section className="page">
       <header className="page-header">
         <div>
           <h1 className="page-title">Встречи</h1>
@@ -244,6 +249,7 @@ const pageAnimation = {
         >
           Предстоящие
         </button>
+
         <button
           type="button"
           className={activeTab === "history" ? "tab active" : "tab"}
@@ -471,6 +477,6 @@ const pageAnimation = {
           </div>
         </div>
       ) : null}
-    </motion.section>
+    </section>
   );
 }

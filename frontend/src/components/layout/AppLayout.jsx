@@ -1,11 +1,10 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, Link } from "react-router-dom";
 import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 
-const navigation = [
+const mainNavigation = [
   { to: "/app", label: "Главная", end: true },
   { to: "/app/meetings", label: "Встречи" },
   { to: "/app/departments", label: "Подразделения" },
-  { to: "/app/profile", label: "Профиль" },
   { to: "/app/admin/users", label: "Администрирование" },
   { to: "/app/directories/skills", label: "Справочник скиллов" },
 ];
@@ -29,7 +28,7 @@ export default function AppLayout() {
         </div>
 
         <nav className="nav" aria-label="Основная навигация">
-          {navigation.map((item) => (
+          {mainNavigation.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -57,13 +56,15 @@ export default function AppLayout() {
         </nav>
 
         <div className="sidebar-footer">
-          <div className="mini-user">
-            <div className="avatar">АК</div>
-            <div>
-              <div className="mini-user-name">Алексей Ковалёв</div>
-              <div className="mini-user-role">BACK · Team Lead</div>
+          <Link to="/app/profile" className="mini-user-link">
+            <div className="mini-user">
+              <div className="avatar">АК</div>
+              <div>
+                <div className="mini-user-name">Алексей Ковалёв</div>
+                <div className="mini-user-role">BACK · Team Lead</div>
+              </div>
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
 
