@@ -5,14 +5,15 @@
 const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
+const userRouter = require('./api/user');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-// app.use('/api/meetings', meetingsRouter);
-
+// app.use('/api/meetings', meetingsRouter);\
+app.use('/api/users', userRouter);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running!' });
