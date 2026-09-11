@@ -141,6 +141,20 @@ h3 {
   font-weight: 500;
   transition: background 0.12s ease, color 0.12s ease;
 }
+.nav-link-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
 
 .nav-link:nth-child(4) {
   margin-top: 10px;
@@ -2528,8 +2542,4 @@ h3 {
   background: rgba(235, 87, 87, 0.16);
   border-color: rgba(235, 87, 87, 0.4);
   color: var(--danger);
-}
-
-.workspace.has-live-banner .content {
-  padding-top: 100px;
 }
