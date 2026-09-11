@@ -81,6 +81,8 @@ model User {
   passwordHash   String    @map("password_hash")
   fullName       String    @map("full_name")
   sessionToken   String?   @unique @map("session_token")
+  avatarUrl      String?   @map("avatar_url")
+  bio            String?
   
   // 🆕 Новые поля пользователя
   birthDate      DateTime? @map("birth_date")  // Дата рождения

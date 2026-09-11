@@ -4,8 +4,8 @@
 
 const express = require('express');
 const cors = require('cors');
+const usersRoutes = require('./routes/users'); // <-- ДОБАВИТЬ
 const authRoutes = require('./routes/auth'); // <-- ДОБАВИТЬ
-const userRouter = require('./api/user');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -16,8 +16,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
-// app.use('/api/meetings', meetingsRouter);\
-app.use('/api/users', userRouter);
+// app.use('/api/meetings', meetingsRouter);
+app.use('/avatars', express.static(path.join(__dirname, '..', 'uploads', 'avatars')))
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running!' });
@@ -25,6 +25,7 @@ app.get('/api/health', (req, res) => {
 
 // Подключаем авторизацию <-- ДОБАВИТЬ
 app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
 
 app.get('/api/users', (req, res) => {
   res.json({ users: [] });
