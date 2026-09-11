@@ -10,7 +10,8 @@ const mainNavigation = [
   { to: "/app/directories/skills", label: "Справочник скиллов" },
 ];
 
-const mockNotifications = [
+// 🔴 Теперь это состояние, а не константа
+const initialNotifications = [
   {
     id: 1,
     title: "Встреча через 30 минут",
@@ -48,6 +49,7 @@ const mockNotifications = [
 export default function AppLayout() {
   const { data: meetingsStatus } = useMeetingsStatus();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState(initialNotifications); // 🔴 Состояние для уведомлений
   const notificationsRef = useRef(null);
 
   const hasLiveMeeting = Boolean(meetingsStatus?.ongoing);
@@ -57,7 +59,7 @@ export default function AppLayout() {
       ? meetingsStatus.upcomingCount
       : null;
 
-  const unreadCount = mockNotifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length; // 🔴 Считаем из состояния
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -72,6 +74,22 @@ export default function AppLayout() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // 🔴 Функция для отметки одного уведомления как прочитанное
+  const markAsRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((notif) =>
+        notif.id === id ? { ...notif, read: true } : notif
+      )
+    );
+  };
+
+  // 🔴 Функция для отметки всех уведомлений как прочитанные
+  const markAllAsRead = () => {
+    setNotifications((prev) =>
+      prev.map((notif) => ({ ...notif, read: true }))
+    );
+  };
 
   return (
     <div className="app-shell">
@@ -124,7 +142,6 @@ export default function AppLayout() {
 
       <div className={`workspace ${hasLiveMeeting ? "has-live-banner" : ""}`}>
         <header className="topbar" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "12px 24px" }}>
-          {/* 🔴 Кнопка Уведомления — СПРАВА */}
           <div 
             className="notifications-dropdown" 
             ref={notificationsRef}
@@ -199,20 +216,22 @@ export default function AppLayout() {
                   Уведомления ({unreadCount} непрочитанных)
                 </div>
 
-                {mockNotifications.length === 0 ? (
+                {notifications.length === 0 ? (
                   <div style={{ padding: "24px", textAlign: "center", color: "#6b7280" }}>
                     Нет уведомлений
                   </div>
                 ) : (
-                  mockNotifications.map((notification) => (
+                  notifications.map((notification) => (
                     <div
                       key={notification.id}
+                      onClick={() => markAsRead(notification.id)} // 🔴 Клик по уведомлению
                       style={{
                         padding: "12px 16px",
                         borderBottom: "1px solid #f3f4f6",
                         background: notification.read ? "white" : "#f0f9ff",
                         cursor: "pointer",
                         transition: "background 0.2s",
+                        opacity: notification.read ? 0.7 : 1, // 🔴 Прочитанные чуть бледнее
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = "#f9fafb";
@@ -234,7 +253,8 @@ export default function AppLayout() {
                         <strong
                           style={{
                             fontSize: "14px",
-                            color: notification.read ? "#374151" : "#111827",
+                            fontWeight: notification.read ? "400" : "600", //  Прочитанные не жирные
+                            color: notification.read ? "#6b7280" : "#111827",
                           }}
                         >
                           {notification.title}
@@ -273,13 +293,16 @@ export default function AppLayout() {
                 >
                   <button
                     type="button"
+                    onClick={markAllAsRead} // 🔴 Добавлен обработчик
+                    disabled={unreadCount === 0} // 🔴 Блокируем если все прочитаны
                     style={{
                       background: "none",
                       border: "none",
-                      color: "#3b82f6",
-                      cursor: "pointer",
+                      color: unreadCount === 0 ? "#9ca3af" : "#3b82f6",
+                      cursor: unreadCount === 0 ? "not-allowed" : "pointer",
                       fontSize: "14px",
                       fontWeight: "500",
+                      opacity: unreadCount === 0 ? 0.5 : 1,
                     }}
                   >
                     Отметить все как прочитанные
