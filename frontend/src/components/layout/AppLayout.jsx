@@ -212,47 +212,60 @@ export default function AppLayout() {
             style={{ position: "relative" }}
           >
             <button
-              className="button secondary"
-              type="button"
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              style={{ 
-                position: "relative",
-                background: "#374151",
-                color: "white",
-                border: "1px solid #4b5563",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "18px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: "44px",
-                minHeight: "36px"
-              }}
-            >
-              🔔
-              {unreadCount > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-8px",
-                    right: "-8px",
-                    background: "#ef4444",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
+                className="button secondary"
+                type="button"
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                style={{ 
+                  position: "relative",
+                  background: "#374151",
+                  color: "white",
+                  border: "1px solid #4b5563",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: "44px",
+                  minHeight: "36px"
+                }}
+              >
+                {/* SVG иконка колокольчика */}
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  {unreadCount}
-                </span>
-              )}
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "-8px",
+                      background: "#ef4444",
+                      color: "white",
+                      borderRadius: "50%",
+                      width: "20px",
+                      height: "20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {unreadCount}
+                  </span>
+                )}
             </button>   
 
             {isNotificationsOpen && (
