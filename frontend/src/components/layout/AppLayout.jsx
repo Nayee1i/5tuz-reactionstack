@@ -2,12 +2,72 @@ import { useState, useRef, useEffect } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
 import { useMeetingsStatus } from "../../shared/context/meetings-status.context.jsx";
 
+const Icons = {
+  home: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 10.5L12 3l9 7.5" />
+      <path d="M5 9.5V21h14V9.5" />
+      <path d="M9 21v-6h6v6" />
+    </svg>
+  ),
+
+  meetings: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M16 3v4M8 3v4M3 10h18" />
+    </svg>
+  ),
+
+  departments: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M3 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16" />
+      <path d="M17 9h2a2 2 0 0 1 2 2v10" />
+      <path d="M7 7h4M7 11h4M7 15h4" />
+    </svg>
+  ),
+
+  admin: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V20h-2.6v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H5.8v-2.6h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V5h2.6v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v2.6h-.1a1.7 1.7 0 0 0-1.6 1Z" />
+    </svg>
+  ),
+
+  skills: (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3l2.4 4.9L20 8.7l-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8L12 3Z" />
+    </svg>
+  ),
+};
+
+
 const mainNavigation = [
-  { to: "/app", label: "Главная", end: true },
-  { to: "/app/meetings", label: "Встречи" },
-  { to: "/app/departments", label: "Подразделения" },
-  { to: "/app/admin/users", label: "Администрирование" },
-  { to: "/app/directories/skills", label: "Справочник скиллов" },
+  {
+    to: "/app",
+    label: "Главная",
+    end: true,
+    icon: Icons.home,
+  },
+  {
+    to: "/app/meetings",
+    label: "Встречи",
+    icon: Icons.meetings,
+  },
+  {
+    to: "/app/departments",
+    label: "Подразделения",
+    icon: Icons.departments,
+  },
+  {
+    to: "/app/admin/users",
+    label: "Администрирование",
+    icon: Icons.admin,
+  },
+  {
+    to: "/app/directories/skills",
+    label: "Справочник скиллов",
+    icon: Icons.skills,
+  },
 ];
 
 // 🔴 Теперь это состояние, а не константа
@@ -50,6 +110,14 @@ export default function AppLayout() {
   const { data: meetingsStatus } = useMeetingsStatus();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications); // 🔴 Состояние для уведомлений
+  const [theme, setTheme] = useState(() => {
+  return localStorage.getItem("theme") || "light";
+  });
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   const notificationsRef = useRef(null);
 
   const hasLiveMeeting = Boolean(meetingsStatus?.ongoing);
@@ -70,6 +138,7 @@ export default function AppLayout() {
         setIsNotificationsOpen(false);
       }
     }
+  
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -101,7 +170,7 @@ export default function AppLayout() {
 
         <nav className="nav" aria-label="Основная навигация">
           {mainNavigation.map((item) => (
-            <NavLink
+                        <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
@@ -109,7 +178,10 @@ export default function AppLayout() {
                 `nav-link ${isActive ? "active" : ""}`.trim()
               }
             >
-              <span>{item.label}</span>
+              <span className="nav-link-content">
+                <span className="nav-icon">{item.icon}</span>
+                <span>{item.label}</span>
+              </span>
 
               {item.to === "/app/meetings" && meetingsBadge ? (
                 <span
@@ -126,6 +198,59 @@ export default function AppLayout() {
             </NavLink>
           ))}
         </nav>
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() =>
+            setTheme((current) =>
+              current === "light" ? "dark" : "light"
+            )
+          }
+        >
+          <span className="theme-toggle-icon">
+            {theme === "light" ? (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+                <path d="m6.34 17.66-1.41 1.41" />
+                <path d="m19.07 4.93-1.41 1.41" />
+              </svg>
+            )}
+          </span>
+
+          <span className="theme-toggle-content">
+            <span>
+              {theme === "light" ? "Тёмная тема" : "Светлая тема"}
+            </span>
+
+            <span className="theme-toggle-arrow">
+              {theme === "light" ? "☾" : "☀"}
+            </span>
+          </span>
+        </button>
 
         <div className="sidebar-footer">
           <Link to="/app/profile" className="mini-user-link">
@@ -149,44 +274,61 @@ export default function AppLayout() {
             style={{ position: "relative" }}
           >
             <button
-              className="button secondary"
-              type="button"
-              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-              style={{ 
-                position: "relative",
-                background: "#374151",
-                color: "white",
-                border: "1px solid #4b5563",
-                padding: "8px 16px",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "500"
-              }}
-            >
-              Уведомления
-              {unreadCount > 0 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    top: "-8px",
-                    right: "-8px",
-                    background: "#ef4444",
-                    color: "white",
-                    borderRadius: "50%",
-                    width: "20px",
-                    height: "20px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
-                    fontWeight: "bold",
-                  }}
+                className="button secondary"
+                type="button"
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                style={{ 
+                  position: "relative",
+                  background: "#374151",
+                  color: "white",
+                  border: "1px solid #4b5563",
+                  padding: "8px 12px",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: "44px",
+                  minHeight: "36px"
+                }}
+              >
+                {/* SVG иконка колокольчика */}
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-8px",
+                      right: "-8px",
+                      background: "#ef4444",
+                      color: "white",
+                      borderRadius: "50%",
+                      width: "20px",
+                      height: "20px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "12px",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {unreadCount}
+                  </span>
+                )}
+            </button>   
 
             {isNotificationsOpen && (
               <div

@@ -2,6 +2,9 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const miscRouter = require('./api/misc'); // <-- ДОБАВИТЬ ЭТО
+const skillsRouter = require('./api/skills');
+
 
 // 1. Импортируем роутеры
 const authRoutes = require('./routes/auth');
@@ -23,6 +26,19 @@ app.use('/api/users', usersRoutes); // <-- Теперь запросы пойд�
 // Проверка работоспособности
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running!' });
+});
+
+// Подключаем авторизацию <-- ДОБАВИТЬ
+app.use('/api/auth', authRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/skills', skillsRouter);
+app.use('/api', miscRouter);
+
+
+
+
+app.get('/api/users', (req, res) => {
+  res.json({ users: [] });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
