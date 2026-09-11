@@ -123,174 +123,170 @@ export default function AppLayout() {
       </aside>
 
       <div className={`workspace ${hasLiveMeeting ? "has-live-banner" : ""}`}>
-        <header className="topbar">
-          <div className="topbar-actions">
-            {/* Dropdown уведомлений - должен быть СПРАВА */}
-            <div 
-              className="notifications-dropdown" 
-              ref={notificationsRef}
-              style={{ position: "relative", marginLeft: "auto" }}
+        <header className="topbar" style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", padding: "12px 24px" }}>
+          {/* 🔴 Кнопка Уведомления — СПРАВА */}
+          <div 
+            className="notifications-dropdown" 
+            ref={notificationsRef}
+            style={{ position: "relative" }}
+          >
+            <button
+              className="button secondary"
+              type="button"
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              style={{ 
+                position: "relative",
+                background: "#374151",
+                color: "white",
+                border: "1px solid #4b5563",
+                padding: "8px 16px",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontSize: "14px",
+                fontWeight: "500"
+              }}
             >
-              <button
-                className="button secondary"
-                type="button"
-                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                style={{ 
-                  position: "relative",
-                  background: "#374151",
-                  color: "white",
-                  border: "1px solid #4b5563",
-                  padding: "8px 16px",
-                  borderRadius: "6px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "500"
-                }}
-              >
-                Уведомления
-                {unreadCount > 0 && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "-8px",
-                      right: "-8px",
-                      background: "#ef4444",
-                      color: "white",
-                      borderRadius: "50%",
-                      width: "20px",
-                      height: "20px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "12px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {isNotificationsOpen && (
-                <div
+              Уведомления
+              {unreadCount > 0 && (
+                <span
                   style={{
                     position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    marginTop: "8px",
-                    background: "white",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-                    width: "360px",
-                    maxHeight: "400px",
-                    overflowY: "auto",
-                    zIndex: 1000,
+                    top: "-8px",
+                    right: "-8px",
+                    background: "#ef4444",
+                    color: "white",
+                    borderRadius: "50%",
+                    width: "20px",
+                    height: "20px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    fontWeight: "bold",
                   }}
                 >
-                  {/* Заголовок с ЧИТАЕМЫМ текстом (тёмный на светлом) */}
-                  <div
-                    style={{
-                      padding: "16px",
-                      borderBottom: "1px solid #e5e7eb",
-                      fontWeight: "600",
-                      fontSize: "16px",
-                      color: "#111827", // тёмный текст
-                      background: "#f9fafb", // светлый фон
-                    }}
-                  >
-                    Уведомления ({unreadCount} непрочитанных)
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {isNotificationsOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 8px)",
+                  right: 0,
+                  background: "white",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: "8px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                  width: "360px",
+                  maxHeight: "400px",
+                  overflowY: "auto",
+                  zIndex: 1000,
+                }}
+              >
+                <div
+                  style={{
+                    padding: "16px",
+                    borderBottom: "1px solid #e5e7eb",
+                    fontWeight: "600",
+                    fontSize: "16px",
+                    color: "#111827",
+                    background: "#f9fafb",
+                  }}
+                >
+                  Уведомления ({unreadCount} непрочитанных)
+                </div>
+
+                {mockNotifications.length === 0 ? (
+                  <div style={{ padding: "24px", textAlign: "center", color: "#6b7280" }}>
+                    Нет уведомлений
                   </div>
-
-                  {mockNotifications.length === 0 ? (
-                    <div style={{ padding: "24px", textAlign: "center", color: "#6b7280" }}>
-                      Нет уведомлений
-                    </div>
-                  ) : (
-                    mockNotifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        style={{
-                          padding: "12px 16px",
-                          borderBottom: "1px solid #f3f4f6",
-                          background: notification.read ? "white" : "#f0f9ff",
-                          cursor: "pointer",
-                          transition: "background 0.2s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#f9fafb";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = notification.read
-                            ? "white"
-                            : "#f0f9ff";
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "flex-start",
-                            marginBottom: "4px",
-                          }}
-                        >
-                          <strong
-                            style={{
-                              fontSize: "14px",
-                              color: notification.read ? "#374151" : "#111827",
-                            }}
-                          >
-                            {notification.title}
-                          </strong>
-                          <span
-                            style={{
-                              fontSize: "12px",
-                              color: "#9ca3af",
-                              whiteSpace: "nowrap",
-                              marginLeft: "8px",
-                            }}
-                          >
-                            {notification.time}
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            color: "#6b7280",
-                            lineHeight: "1.4",
-                          }}
-                        >
-                          {notification.message}
-                        </div>
-                      </div>
-                    ))
-                  )}
-
-                  <div
-                    style={{
-                      padding: "12px 16px",
-                      textAlign: "center",
-                      borderTop: "1px solid #e5e7eb",
-                      background: "#f9fafb",
-                    }}
-                  >
-                    <button
-                      type="button"
+                ) : (
+                  mockNotifications.map((notification) => (
+                    <div
+                      key={notification.id}
                       style={{
-                        background: "none",
-                        border: "none",
-                        color: "#3b82f6",
+                        padding: "12px 16px",
+                        borderBottom: "1px solid #f3f4f6",
+                        background: notification.read ? "white" : "#f0f9ff",
                         cursor: "pointer",
-                        fontSize: "14px",
-                        fontWeight: "500",
+                        transition: "background 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f9fafb";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = notification.read
+                          ? "white"
+                          : "#f0f9ff";
                       }}
                     >
-                      Отметить все как прочитанные
-                    </button>
-                  </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        <strong
+                          style={{
+                            fontSize: "14px",
+                            color: notification.read ? "#374151" : "#111827",
+                          }}
+                        >
+                          {notification.title}
+                        </strong>
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#9ca3af",
+                            whiteSpace: "nowrap",
+                            marginLeft: "8px",
+                          }}
+                        >
+                          {notification.time}
+                        </span>
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: "#6b7280",
+                          lineHeight: "1.4",
+                        }}
+                      >
+                        {notification.message}
+                      </div>
+                    </div>
+                  ))
+                )}
+
+                <div
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: "center",
+                    borderTop: "1px solid #e5e7eb",
+                    background: "#f9fafb",
+                  }}
+                >
+                  <button
+                    type="button"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: "#3b82f6",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Отметить все как прочитанные
+                  </button>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </header>
 
