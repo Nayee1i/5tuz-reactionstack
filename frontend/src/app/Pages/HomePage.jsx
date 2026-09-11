@@ -192,6 +192,53 @@ function ErrorState({ message, onRetry }) {
   );
 }
 
+function DashboardSkeleton() {
+  return (
+    <section className="page">
+      <div className="page-header">
+        <div>
+          <div className="skeleton skeleton-title" />
+          <div className="skeleton skeleton-subtitle" />
+        </div>
+      </div>
+
+      <div className="grid">
+        <section className="card span-12">
+          <div className="kpi-grid">
+            <div className="skeleton skeleton-kpi" />
+            <div className="skeleton skeleton-kpi" />
+            <div className="skeleton skeleton-kpi" />
+            <div className="skeleton skeleton-kpi" />
+          </div>
+        </section>
+
+        <section className="card span-7">
+          <div className="stack">
+            <div className="skeleton skeleton-row" />
+            <div className="skeleton skeleton-row" />
+            <div className="skeleton skeleton-row" />
+          </div>
+        </section>
+
+        <section className="card span-5">
+          <div className="stack">
+            <div className="skeleton skeleton-row" />
+            <div className="skeleton skeleton-row" />
+          </div>
+        </section>
+
+        <section className="card span-8">
+          <div className="skeleton skeleton-card" />
+        </section>
+
+        <section className="card span-4">
+          <div className="skeleton skeleton-card" />
+        </section>
+      </div>
+    </section>
+  );
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const { data, loading, error, reload } = useApi(getDashboard, []);
@@ -205,15 +252,9 @@ export default function HomePage() {
     exit: { opacity: 0, y: -12, transition: { duration: 0.15, ease: "easeIn" } }, // Уходим чуть вверх при смене страницы
   };
 
-  if (loading) {
-    return (
-      <motion.section className="page" {...pageAnimation}>
-        <div className="card">
-          <div className="empty">Загрузка дашборда...</div>
-        </div>
-      </motion.section>
-    );
-  }
+  if (!data && loading) {
+  return <DashboardSkeleton />;
+  } 
 
   if (error || !data) {
     return (
@@ -261,7 +302,7 @@ export default function HomePage() {
       <header className="page-header">
         <div>
           <h1 className="page-title">
-            {getGreeting()}, {displayName}
+            {getGreeting()}, {displayName}!
           </h1>
           <p className="page-subtitle">
             {subtitle || "Ваш рабочий центр развития"}
@@ -404,19 +445,23 @@ export default function HomePage() {
           </div>
 
           <div className="stack">
-            <button className="button secondary full" type="button">
+            <button className="button secondary full" type="button" onClick={() => navigate("/app/directories/skills?new=1")}>
               Добавить скилл
             </button>
 
-            <button className="button secondary full" type="button">
-              Провести встречу 1:1
+            <button className="button secondary full" type="button" onClick={() => navigate("/app/meetings?new=1")}>
+              Запланировать встречу 1:1
             </button>
 
-            <button className="button secondary full" type="button">
-              Прикрепить материалы
+            <button className="button secondary full" type="button" onClick={() => navigate("/app/meetings")}>
+              Запланированные встречи
             </button>
 
-            <button className="button secondary full" type="button">
+            <button
+              className="button secondary full"
+              type="button"
+              onClick={() => navigate("/app/profile")}
+            >
               Посмотреть профиль
             </button>
           </div>

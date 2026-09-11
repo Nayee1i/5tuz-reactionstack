@@ -96,7 +96,7 @@ function normalizeHistory(payload) {
 
 export async function getMeetingsStatus() {
   if (USE_MOCK) {
-    await delay(350);
+    await delay(80);
     return normalizeStatus(meetingsStatusMock);
   }
 
@@ -106,7 +106,7 @@ export async function getMeetingsStatus() {
 
 export async function getUpcomingMeetings(limit = 20) {
   if (USE_MOCK) {
-    await delay(500);
+    await delay(100);
     return normalizeUpcoming(upcomingMeetingsMock);
   }
 
@@ -116,7 +116,7 @@ export async function getUpcomingMeetings(limit = 20) {
 
 export async function getMeetingsHistory(page = 1, pageSize = 10) {
   if (USE_MOCK) {
-    await delay(550);
+    await delay(120);
     return normalizeHistory(meetingsHistoryMock);
   }
 

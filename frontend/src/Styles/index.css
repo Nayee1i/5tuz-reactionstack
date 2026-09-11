@@ -3231,3 +3231,20 @@ h3 {
   line-height: 1;
   margin: 0;
 }
+
+/* ===== Mini user link ===== */
+
+.mini-user-link {
+  display: block;
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: background 0.12s ease;
+}
+
+.mini-user-link:hover {
+  background: var(--bg-hover);
+}
+
+.mini-user-link:hover .mini-user-name {
+  color: var(--text);
+}
