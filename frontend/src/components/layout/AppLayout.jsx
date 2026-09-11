@@ -70,12 +70,6 @@ export default function AppLayout() {
 
       <div className={`workspace ${hasLiveMeeting ? "has-live-banner" : ""}`}>
         <header className="topbar">
-          <input
-            className="search"
-            type="search"
-            placeholder="Поиск: сотрудники, скиллы, встречи…"
-          />
-
           <div className="topbar-actions">
             <button className="button secondary" type="button">
               Уведомления
