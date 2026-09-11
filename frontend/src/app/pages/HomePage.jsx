@@ -1,4 +1,4 @@
-import { useState } from "react"; // 1. Добавили импорт useState
+import { useState } from "react"; 
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../../shared/hooks/useApi.js";
 import { getDashboard } from "../../shared/api/dashboard.api.js";
@@ -241,7 +241,6 @@ function DashboardSkeleton() {
 }
 
 export default function HomePage() {
-  // 2. Добавили состояние для управления видимостью статистики (по умолчанию скрыта)
   const [isStatsOpen, setIsStatsOpen] = useState(true);
   
   const navigate = useNavigate();
@@ -312,7 +311,6 @@ export default function HomePage() {
           </p>
         </div>
         <div className="page-actions">
-          {/* 3. Добавили onClick и динамический текст кнопки */}
           <button 
             className="button secondary" 
             type="button"
@@ -324,7 +322,6 @@ export default function HomePage() {
       </header>
 
       <div className="grid">
-        {/* 4. Обернули блок статистики в условие isStatsOpen */}
         {isStatsOpen && (
           <section className="card span-12">
             {kpis.length === 0 ? (
@@ -390,7 +387,12 @@ export default function HomePage() {
           <div className="card-header">
             <h2>Ближайшие встречи</h2>
 
-            <button className="link-button" type="button">
+            {/* 👇 ДОБАВЛЕНО: onClick для перехода на страницу встреч */}
+            <button 
+              className="link-button" 
+              type="button"
+              onClick={() => navigate("/app/meetings")}
+            >
               Все
             </button>
           </div>
