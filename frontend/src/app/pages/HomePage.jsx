@@ -242,6 +242,7 @@ function DashboardSkeleton() {
 
 // Компонент модального окна для добавления проблемы
 // Компонент модального окна для добавления проблемы (в стиле "Запланировать встречу")
+// Компонент модального окна для добавления проблемы (в стиле "Новый пользователь")
 function AddProblemModal({ isOpen, onClose, onSubmit }) {
   const [formData, setFormData] = useState({
     title: "",
@@ -282,7 +283,7 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
               left: 0,
               right: 0,
               bottom: 0,
-              background: "rgba(0, 0, 0, 0.7)",
+              background: "rgba(0, 0, 0, 0.8)",
               zIndex: 1000,
               display: "flex",
               alignItems: "center",
@@ -295,12 +296,13 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
               style={{
-                background: "#1f2937",
+                background: "#0d0d0d",
+                border: "1px solid #1a1a1a",
                 borderRadius: "12px",
-                padding: "24px",
+                padding: "32px",
                 width: "100%",
                 maxWidth: "520px",
-                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+                boxShadow: "0 25px 50px rgba(0, 0, 0, 0.8)",
               }}
             >
               {/* Заголовок */}
@@ -309,7 +311,7 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: "24px",
+                  marginBottom: "28px",
                 }}
               >
                 <h2 style={{ margin: 0, fontSize: "20px", color: "white", fontWeight: "600" }}>
@@ -321,11 +323,18 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                   style={{
                     background: "none",
                     border: "none",
-                    color: "#9ca3af",
+                    color: "#6b7280",
                     fontSize: "24px",
                     cursor: "pointer",
                     padding: "0",
                     lineHeight: 1,
+                    transition: "color 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = "white";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = "#6b7280";
                   }}
                 >
                   ×
@@ -339,12 +348,12 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                     style={{
                       display: "block",
                       marginBottom: "8px",
-                      color: "#d1d5db",
+                      color: "white",
                       fontSize: "14px",
-                      fontWeight: "500",
+                      fontWeight: "600",
                     }}
                   >
-                    Название *
+                    Название
                   </label>
                   <input
                     type="text"
@@ -355,15 +364,23 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                     required
                     style={{
                       width: "100%",
-                      padding: "10px 12px",
-                      background: "#374151",
-                      border: "1px solid #4b5563",
-                      borderRadius: "6px",
+                      padding: "12px 14px",
+                      background: "#111111",
+                      border: "1px solid #2a2a2a",
+                      borderRadius: "8px",
                       color: "white",
                       fontSize: "14px",
                       boxSizing: "border-box",
+                      outline: "none",
+                      transition: "border-color 0.2s",
                     }}
                     placeholder="Например: Отставание по React"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#4b5563";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#2a2a2a";
+                    }}
                   />
                 </div>
 
@@ -373,9 +390,9 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                     style={{
                       display: "block",
                       marginBottom: "8px",
-                      color: "#d1d5db",
+                      color: "white",
                       fontSize: "14px",
-                      fontWeight: "500",
+                      fontWeight: "600",
                     }}
                   >
                     Описание
@@ -388,107 +405,123 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                     rows={3}
                     style={{
                       width: "100%",
-                      padding: "10px 12px",
-                      background: "#374151",
-                      border: "1px solid #4b5563",
-                      borderRadius: "6px",
+                      padding: "12px 14px",
+                      background: "#111111",
+                      border: "1px solid #2a2a2a",
+                      borderRadius: "8px",
                       color: "white",
                       fontSize: "14px",
                       resize: "vertical",
                       boxSizing: "border-box",
                       fontFamily: "inherit",
+                      outline: "none",
+                      transition: "border-color 0.2s",
                     }}
                     placeholder="Опишите проблему..."
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#4b5563";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#2a2a2a";
+                    }}
                   />
                 </div>
 
-                {/* Две колонки: Владелец и Срок решения */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "16px",
-                    marginBottom: "20px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        color: "#d1d5db",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Владелец *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.owner}
-                      onChange={(e) =>
-                        setFormData({ ...formData, owner: e.target.value })
-                      }
-                      required
-                      style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        background: "#374151",
-                        border: "1px solid #4b5563",
-                        borderRadius: "6px",
-                        color: "white",
-                        fontSize: "14px",
-                        boxSizing: "border-box",
-                      }}
-                      placeholder="Например: Иван Петров"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        color: "#d1d5db",
-                        fontSize: "14px",
-                        fontWeight: "500",
-                      }}
-                    >
-                      Срок решения *
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.dueDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, dueDate: e.target.value })
-                      }
-                      required
-                      style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        background: "#374151",
-                        border: "1px solid #4b5563",
-                        borderRadius: "6px",
-                        color: "white",
-                        fontSize: "14px",
-                        boxSizing: "border-box",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Уровень важности */}
-                <div style={{ marginBottom: "24px" }}>
+                {/* Поле: Владелец */}
+                <div style={{ marginBottom: "20px" }}>
                   <label
                     style={{
                       display: "block",
                       marginBottom: "8px",
-                      color: "#d1d5db",
+                      color: "white",
                       fontSize: "14px",
-                      fontWeight: "500",
+                      fontWeight: "600",
                     }}
                   >
-                    Уровень важности *
+                    Владелец
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.owner}
+                    onChange={(e) =>
+                      setFormData({ ...formData, owner: e.target.value })
+                    }
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      background: "#111111",
+                      border: "1px solid #2a2a2a",
+                      borderRadius: "8px",
+                      color: "white",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                      outline: "none",
+                      transition: "border-color 0.2s",
+                    }}
+                    placeholder="Например: Иван Петров"
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#4b5563";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#2a2a2a";
+                    }}
+                  />
+                </div>
+
+                {/* Поле: Срок решения */}
+                <div style={{ marginBottom: "20px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "8px",
+                      color: "white",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Срок решения
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.dueDate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dueDate: e.target.value })
+                    }
+                    required
+                    style={{
+                      width: "100%",
+                      padding: "12px 14px",
+                      background: "#111111",
+                      border: "1px solid #2a2a2a",
+                      borderRadius: "8px",
+                      color: "white",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                      outline: "none",
+                      transition: "border-color 0.2s",
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = "#4b5563";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "#2a2a2a";
+                    }}
+                  />
+                </div>
+
+                {/* Уровень важности */}
+                <div style={{ marginBottom: "28px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      marginBottom: "10px",
+                      color: "white",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                    }}
+                  >
+                    Уровень важности
                   </label>
                   <div
                     style={{
@@ -513,14 +546,24 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                           background:
                             formData.severity === item.value
                               ? item.color
-                              : "#374151",
-                          border: "1px solid #4b5563",
-                          borderRadius: "6px",
+                              : "#111111",
+                          border: `1px solid ${formData.severity === item.value ? item.color : "#2a2a2a"}`,
+                          borderRadius: "8px",
                           color: "white",
                           fontSize: "14px",
                           fontWeight: formData.severity === item.value ? "600" : "500",
                           cursor: "pointer",
                           transition: "all 0.2s",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (formData.severity !== item.value) {
+                            e.currentTarget.style.background = "#1a1a1a";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (formData.severity !== item.value) {
+                            e.currentTarget.style.background = "#111111";
+                          }
                         }}
                       >
                         {item.label}
@@ -542,13 +585,20 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                     onClick={onClose}
                     style={{
                       padding: "10px 20px",
-                      background: "#374151",
-                      border: "1px solid #4b5563",
-                      borderRadius: "6px",
+                      background: "#1a1a1a",
+                      border: "1px solid #2a2a2a",
+                      borderRadius: "8px",
                       color: "white",
                       fontSize: "14px",
                       fontWeight: "500",
                       cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#2a2a2a";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#1a1a1a";
                     }}
                   >
                     Отмена
@@ -557,13 +607,20 @@ function AddProblemModal({ isOpen, onClose, onSubmit }) {
                     type="submit"
                     style={{
                       padding: "10px 20px",
-                      background: "#3b82f6",
+                      background: "#6366f1",
                       border: "none",
-                      borderRadius: "6px",
+                      borderRadius: "8px",
                       color: "white",
                       fontSize: "14px",
                       fontWeight: "600",
                       cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#4f46e5";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#6366f1";
                     }}
                   >
                     Добавить
